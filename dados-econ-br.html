@@ -5,184 +5,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Painel econômico com indicadores macroeconômicos do Brasil em tempo real - SELIC, IPCA, câmbio e mais">
     <title>Painel Econômico Brasil | Indicadores Macroeconômicos</title>
-
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-
-    <!-- Tailwind Config -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        background: '#0a0a0a',
-                        card: '#1a1a1a',
-                        border: '#333333',
+                        background: '#0b1121',
+                        card: '#111a2e',
+                        'card-hover': '#162035',
+                        border: '#1e2d4a',
                         primary: '#3b82f6',
                         success: '#22c55e',
                         danger: '#ef4444',
-                        muted: '#9ca3af'
+                        muted: '#64748b',
+                        'muted-light': '#94a3b8'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
+                        mono: ['JetBrains Mono', 'Consolas', 'monospace']
                     }
                 }
             }
         }
     </script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
+            background: #0b1121;
+            color: #e2e8f0;
             min-height: 100vh;
         }
-
-        @keyframes ping {
-            75%, 100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-
-        .ping {
-            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-
         .skeleton {
-            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background: linear-gradient(90deg, #111a2e 25%, #1a2540 50%, #111a2e 75%);
             background-size: 200% 100%;
             animation: loading 1.5s ease-in-out infinite;
         }
-
         @keyframes loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .card-glass {
-            background: rgba(26, 26, 26, 0.5);
-            border: 1px solid rgba(51, 51, 51, 0.5);
-            backdrop-filter: blur(12px);
-            transition: all 0.3s ease;
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .indicator-card {
+            background: #111a2e;
+            border: 1px solid #1e2d4a;
+            border-radius: 12px;
+            padding: 20px 24px;
+            transition: all 0.2s ease;
         }
-
-        .card-glass:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        .indicator-card:hover {
+            border-color: #2a3f66;
+            background: #14203a;
         }
-
-        .trend-up {
-            color: #22c55e;
+        .change-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
         }
-
-        .trend-down {
-            color: #ef4444;
+        .change-badge.positive {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+        .change-badge.negative {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+        .change-badge.neutral {
+            background: rgba(100, 116, 139, 0.15);
+            color: #94a3b8;
+        }
+        .icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .chart-container {
+            background: #111a2e;
+            border: 1px solid #1e2d4a;
+            border-radius: 12px;
+            padding: 24px;
         }
     </style>
 </head>
 <body>
     <!-- Sticky Header -->
-    <header class="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+    <header class="sticky top-0 z-50 backdrop-blur-xl border-b border-border/60" style="background: rgba(11, 17, 33, 0.85);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center">
                         <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-lg font-semibold">Painel Econômico</h1>
+                        <h1 class="text-lg font-bold text-white">Painel Econômico</h1>
                         <p class="text-xs text-muted hidden sm:block">Indicadores macroeconômicos do Brasil</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="relative flex items-center gap-2">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                        </span>
-                        <span class="text-xs text-muted">Dados ao vivo</span>
-                    </div>
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
+                    </span>
+                    <span class="text-sm text-muted-light">Dados ao vivo</span>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Loading State -->
-        <div id="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="skeleton rounded-lg h-48"></div>
-            <div class="skeleton rounded-lg h-48"></div>
-            <div class="skeleton rounded-lg h-48"></div>
-            <div class="skeleton rounded-lg h-48"></div>
-            <div class="skeleton rounded-lg h-48"></div>
-            <div class="skeleton rounded-lg h-48"></div>
-        </div>
-
-        <!-- Dashboard Grid -->
-        <div id="dashboard" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in">
-            <!-- Cards will be inserted here -->
-        </div>
-
-        <!-- Detailed Charts Section -->
-        <div id="charts-section" class="hidden mt-12 space-y-8">
-            <h2 class="text-2xl font-bold mb-6">Análise Detalhada</h2>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- IPCA 12-month Chart -->
-                <div class="card-glass rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">IPCA - Últimos 12 Meses</h3>
-                    <canvas id="chart-ipca-detail"></canvas>
+        <div id="loading" class="space-y-8">
+            <div>
+                <div class="skeleton rounded h-5 w-48 mb-4"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
                 </div>
-
-                <!-- SELIC Evolution Chart -->
-                <div class="card-glass rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">Evolução da Taxa SELIC</h3>
-                    <canvas id="chart-selic-detail"></canvas>
+            </div>
+            <div>
+                <div class="skeleton rounded h-5 w-64 mb-4"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
                 </div>
-
-                <!-- USD/BRL Exchange Rate Chart -->
-                <div class="card-glass rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">Dólar (USD/BRL) - 6 Meses</h3>
-                    <canvas id="chart-usd-detail"></canvas>
-                </div>
-
-                <!-- Unemployment Trend Chart -->
-                <div class="card-glass rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">Taxa de Desemprego</h3>
-                    <canvas id="chart-unemployment-detail"></canvas>
+            </div>
+            <div>
+                <div class="skeleton rounded h-5 w-48 mb-4"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="skeleton rounded-xl h-32"></div>
+                    <div class="skeleton rounded-xl h-32"></div>
                 </div>
             </div>
         </div>
 
+        <!-- Dashboard Content -->
+        <div id="dashboard" class="hidden space-y-10"></div>
+
         <!-- Footer -->
-        <footer class="mt-16 pt-8 border-t border-border/50 text-center text-sm text-muted">
+        <footer class="mt-16 pt-8 border-t border-border/40 text-center text-sm text-muted">
             <p>Dados fornecidos pelo Banco Central do Brasil (BCB)</p>
             <p class="mt-2">Atualizado automaticamente a cada 30 minutos</p>
             <p class="mt-1 text-xs" id="last-update"></p>
@@ -190,7 +175,7 @@
     </main>
 
     <script>
-        // BCB API Series Codes
+        // ── BCB API Series Codes ──────────────────────
         const SERIES = {
             selic: 432,
             ipcaMensal: 433,
@@ -204,495 +189,426 @@
             reservas: 3546
         };
 
-        // Global data storage
         let economicData = {};
         let charts = {};
 
-        // Utility Functions
+        // ── Icon SVGs ──────────────────────────────────
+        const ICONS = {
+            bank: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>`,
+            percent: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 5L5 19M9 7a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/></svg>`,
+            chart: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>`,
+            trending: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>`,
+            dollar: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            globe: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>`,
+            clipboard: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`,
+            shield: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>`
+        };
+
+        const TREND_WAVE = `<svg class="w-4 h-3" viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6c2-3 4-3 6 0s4 3 6 0 4-3 6 0" stroke-linecap="round"/></svg>`;
+
+        // ── Indicator Configurations ──────────────────
+        const INDICATOR_CONFIG = {
+            selic: { label: 'TAXA SELIC', icon: ICONS.bank, color: '#3b82f6', suffix: ' a.a.', section: 'principal' },
+            cdi: { label: 'CDI', icon: ICONS.percent, color: '#a855f7', suffix: ' a.a.', section: 'principal' },
+            ipcaMensal: { label: 'IPCA MENSAL', icon: ICONS.chart, color: '#3b82f6', suffix: '', section: 'principal' },
+            ipca12Meses: { label: 'IPCA 12 MESES', icon: ICONS.trending, color: '#22c55e', suffix: '', section: 'principal' },
+            usd: { label: 'DÓLAR (PTAX)', icon: ICONS.dollar, color: '#3b82f6', suffix: '', section: 'cambio' },
+            eur: { label: 'EURO', icon: ICONS.globe, color: '#22c55e', suffix: '', section: 'cambio' },
+            igpm: { label: 'IGP-M MENSAL', icon: ICONS.clipboard, color: '#3b82f6', suffix: '', section: 'cambio' },
+            desemprego: { label: 'DESEMPREGO', icon: ICONS.chart, color: '#3b82f6', suffix: '', section: 'cambio' },
+            dividaPublica: { label: 'DÍVIDA/PIB', icon: ICONS.shield, color: '#22c55e', suffix: '', section: 'fiscal' },
+            reservas: { label: 'RESERVAS INTERNACIONAIS', icon: ICONS.globe, color: '#22c55e', suffix: '', section: 'fiscal' }
+        };
+
+        // ── Utility Functions ──────────────────────────
         function formatDateDDMMYYYY(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
+            const d = String(date.getDate()).padStart(2, '0');
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            return `${d}/${m}/${date.getFullYear()}`;
         }
 
-        function formatDateFromAPI(dateStr) {
-            // API returns DD/MM/YYYY
-            const [day, month, year] = dateStr.split('/');
-            return new Date(year, month - 1, day);
+        function formatDateShort(dateStr) {
+            // DD/MM/YYYY → MM/YY
+            const parts = dateStr.split('/');
+            return `${parts[1]}/${parts[2].slice(2)}`;
         }
 
         function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+            return 'R$ ' + new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
             }).format(value);
         }
 
         function formatPercent(value) {
             return new Intl.NumberFormat('pt-BR', {
-                minimumFractionDigits: 2,
+                minimumFractionDigits: value % 1 === 0 ? 1 : 2,
                 maximumFractionDigits: 2
             }).format(value) + '%';
         }
 
-        function formatNumber(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(value);
+        function formatReservas(value) {
+            const bi = value / 1000;
+            return 'US$ ' + new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(bi) + ' bi';
         }
 
-        function formatLargeNumber(value) {
-            if (value >= 1000000) {
-                return (value / 1000000).toFixed(1) + 'M';
-            } else if (value >= 1000) {
-                return (value / 1000).toFixed(1) + 'K';
-            }
-            return value.toFixed(0);
-        }
-
-        // BCB API Fetching
-        async function fetchBCBSeries(code, lastN = 24) {
+        // ── BCB API Fetching ──────────────────────────
+        async function fetchBCBSeries(code, months = 24) {
             try {
-                const endDate = new Date();
-                const startDate = new Date();
-                startDate.setMonth(startDate.getMonth() - lastN);
-
-                const startStr = formatDateDDMMYYYY(startDate);
-                const endStr = formatDateDDMMYYYY(endDate);
-
-                const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${code}/dados?formato=json&dataInicial=${startStr}&dataFinal=${endStr}`;
-
-                const response = await fetch(url);
-                if (!response.ok) {
-                    console.error(`Error fetching series ${code}:`, response.statusText);
-                    return [];
-                }
-
-                const data = await response.json();
-                return data.map(item => ({
-                    date: item.data,
-                    value: parseFloat(item.valor)
-                }));
-            } catch (error) {
-                console.error(`Failed to fetch series ${code}:`, error);
+                const end = new Date();
+                const start = new Date();
+                start.setMonth(start.getMonth() - months);
+                const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${code}/dados?formato=json&dataInicial=${formatDateDDMMYYYY(start)}&dataFinal=${formatDateDDMMYYYY(end)}`;
+                const res = await fetch(url);
+                if (!res.ok) return [];
+                const data = await res.json();
+                return data.map(d => ({ date: d.data, value: parseFloat(d.valor) }));
+            } catch (e) {
+                console.error(`Failed to fetch series ${code}:`, e);
                 return [];
             }
         }
 
-        // Load all economic data
         async function loadEconomicData() {
-            try {
-                console.log('Loading economic data from BCB API...');
+            const [selicData, ipcaMensalData, ipca12MesesData, igpmData, cdiData, usdData, eurData, desempregoData, dividaData, reservasData] = await Promise.all([
+                fetchBCBSeries(SERIES.selic, 24),
+                fetchBCBSeries(SERIES.ipcaMensal, 24),
+                fetchBCBSeries(SERIES.ipca12Meses, 24),
+                fetchBCBSeries(SERIES.igpm, 24),
+                fetchBCBSeries(SERIES.cdi, 24),
+                fetchBCBSeries(SERIES.usd, 6),
+                fetchBCBSeries(SERIES.eur, 6),
+                fetchBCBSeries(SERIES.desemprego, 24),
+                fetchBCBSeries(SERIES.dividaPublica, 24),
+                fetchBCBSeries(SERIES.reservas, 24)
+            ]);
 
-                const [
-                    selicData,
-                    ipcaMensalData,
-                    ipca12MesesData,
-                    igpmData,
-                    cdiData,
-                    usdData,
-                    eurData,
-                    desempregoData,
-                    dividaPublicaData,
-                    reservasData
-                ] = await Promise.all([
-                    fetchBCBSeries(SERIES.selic, 24),
-                    fetchBCBSeries(SERIES.ipcaMensal, 24),
-                    fetchBCBSeries(SERIES.ipca12Meses, 24),
-                    fetchBCBSeries(SERIES.igpm, 24),
-                    fetchBCBSeries(SERIES.cdi, 24),
-                    fetchBCBSeries(SERIES.usd, 6),
-                    fetchBCBSeries(SERIES.eur, 6),
-                    fetchBCBSeries(SERIES.desemprego, 24),
-                    fetchBCBSeries(SERIES.dividaPublica, 24),
-                    fetchBCBSeries(SERIES.reservas, 24)
-                ]);
-
-                // Process data
-                economicData = {
-                    selic: processSeriesData(selicData, 'SELIC', 'percent'),
-                    ipcaMensal: processSeriesData(ipcaMensalData, 'IPCA Mensal', 'percent'),
-                    ipca12Meses: processSeriesData(ipca12MesesData, 'IPCA 12 Meses', 'percent'),
-                    igpm: processSeriesData(igpmData, 'IGP-M', 'percent'),
-                    cdi: processSeriesData(cdiData, 'CDI', 'percent'),
-                    usd: processSeriesData(usdData, 'Dólar (USD/BRL)', 'currency'),
-                    eur: processSeriesData(eurData, 'Euro (EUR/BRL)', 'currency'),
-                    desemprego: processSeriesData(desempregoData, 'Desemprego', 'percent'),
-                    dividaPublica: processSeriesData(dividaPublicaData, 'Dívida Pública/PIB', 'percent'),
-                    reservas: processSeriesData(reservasData, 'Reservas Int.', 'millions')
-                };
-
-                console.log('Economic data loaded successfully');
-                return economicData;
-            } catch (error) {
-                console.error('Error loading economic data:', error);
-                throw error;
-            }
-        }
-
-        function processSeriesData(data, name, format) {
-            if (!data || data.length === 0) {
-                return {
-                    name,
-                    current: null,
-                    previous: null,
-                    change: 0,
-                    trend: 'neutral',
-                    history: [],
-                    format,
-                    lastUpdate: null
-                };
-            }
-
-            const current = data[data.length - 1];
-            const previous = data.length > 1 ? data[data.length - 2] : current;
-            const change = previous.value !== 0 ? ((current.value - previous.value) / previous.value) * 100 : 0;
-
-            // Determine trend (for inflation-like metrics, lower is better)
-            let trend = 'neutral';
-            if (change > 0) {
-                trend = ['IPCA Mensal', 'IPCA 12 Meses', 'IGP-M', 'Desemprego', 'Dívida Pública/PIB'].includes(name) ? 'down' : 'up';
-            } else if (change < 0) {
-                trend = ['IPCA Mensal', 'IPCA 12 Meses', 'IGP-M', 'Desemprego', 'Dívida Pública/PIB'].includes(name) ? 'up' : 'down';
-            }
-
-            return {
-                name,
-                current: current.value,
-                previous: previous.value,
-                change,
-                trend,
-                history: data,
-                format,
-                lastUpdate: current.date
+            economicData = {
+                selic: processData(selicData, 'selic'),
+                cdi: processData(cdiData, 'cdi'),
+                ipcaMensal: processData(ipcaMensalData, 'ipcaMensal'),
+                ipca12Meses: processData(ipca12MesesData, 'ipca12Meses'),
+                usd: processData(usdData, 'usd'),
+                eur: processData(eurData, 'eur'),
+                igpm: processData(igpmData, 'igpm'),
+                desemprego: processData(desempregoData, 'desemprego'),
+                dividaPublica: processData(dividaData, 'dividaPublica'),
+                reservas: processData(reservasData, 'reservas')
             };
         }
 
-        // Render indicator cards
-        function renderIndicatorCard(indicator, index) {
-            const { name, current, previous, change, trend, format, lastUpdate } = indicator;
+        function processData(data, key) {
+            if (!data || data.length === 0) {
+                return { key, current: null, previous: null, change: 0, history: [], lastUpdate: null };
+            }
+            const current = data[data.length - 1];
+            const previous = data.length > 1 ? data[data.length - 2] : current;
+            const change = +(current.value - previous.value).toFixed(4);
+            return { key, current: current.value, previous: previous.value, change, history: data, lastUpdate: current.date };
+        }
 
-            if (current === null) {
+        // ── Rendering ──────────────────────────────────
+        function formatIndicatorValue(key, value) {
+            if (value === null) return '—';
+            const cfg = INDICATOR_CONFIG[key];
+            if (key === 'usd' || key === 'eur') return formatCurrency(value);
+            if (key === 'reservas') return formatReservas(value);
+            return formatPercent(value) + (cfg.suffix || '');
+        }
+
+        function getChangeBadgeClass(key, change) {
+            if (Math.abs(change) < 0.001) return 'neutral';
+            // For inflation/unemployment/debt: increase is bad (red), decrease is good (green)
+            const invertedKeys = ['ipcaMensal', 'ipca12Meses', 'igpm', 'desemprego', 'dividaPublica'];
+            if (invertedKeys.includes(key)) {
+                return change > 0 ? 'negative' : 'positive';
+            }
+            return change > 0 ? 'positive' : 'negative';
+        }
+
+        function formatChange(key, change) {
+            const prefix = change > 0 ? '+' : '';
+            if (key === 'usd' || key === 'eur') return prefix + change.toFixed(4);
+            if (key === 'reservas') return prefix + change.toFixed(1);
+            return prefix + change.toFixed(change === 0 ? 2 : Math.abs(change) < 1 ? 2 : 1);
+        }
+
+        function renderCard(key, data) {
+            const cfg = INDICATOR_CONFIG[key];
+            if (!data || data.current === null) {
                 return `
-                    <div class="card-glass rounded-lg p-6">
-                        <h3 class="text-sm font-medium text-muted mb-2">${name}</h3>
-                        <div class="text-gray-500">Dados indisponíveis</div>
-                    </div>
-                `;
+                    <div class="indicator-card">
+                        <div class="flex items-start justify-between mb-3">
+                            <span class="text-xs font-semibold tracking-wider text-muted uppercase">${cfg.label}</span>
+                            <div class="icon-circle" style="background: ${cfg.color}15; color: ${cfg.color};">${cfg.icon}</div>
+                        </div>
+                        <div class="text-lg text-muted">Dados indisponíveis</div>
+                    </div>`;
             }
 
-            const formattedValue = formatValue(current, format);
-            const trendClass = trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'text-muted';
-            const trendIcon = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
+            const value = formatIndicatorValue(key, data.current);
+            const badgeClass = getChangeBadgeClass(key, data.change);
+            const changeStr = formatChange(key, data.change);
+            const changeDisplay = Math.abs(data.change) < 0.001
+                ? `<span class="change-badge neutral">— 0.00</span>`
+                : `<span class="change-badge ${badgeClass}">${TREND_WAVE}${changeStr}</span>`;
 
             return `
-                <div class="card-glass rounded-lg p-6 fade-in" style="animation-delay: ${index * 0.05}s">
-                    <h3 class="text-sm font-medium text-muted mb-2">${name}</h3>
-                    <div class="text-3xl font-bold mb-2 font-mono">${formattedValue}</div>
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="${trendClass} text-sm font-medium">
-                            ${trendIcon} ${Math.abs(change).toFixed(2)}%
-                        </span>
-                        <span class="text-xs text-muted">${lastUpdate || 'N/A'}</span>
+                <div class="indicator-card fade-in">
+                    <div class="flex items-start justify-between mb-3">
+                        <span class="text-xs font-semibold tracking-wider text-muted uppercase">${cfg.label}</span>
+                        <div class="icon-circle" style="background: ${cfg.color}15; color: ${cfg.color};">${cfg.icon}</div>
                     </div>
-                    <div class="h-16">
-                        <canvas id="chart-mini-${index}"></canvas>
+                    <div class="text-3xl font-bold text-white font-mono tracking-tight mb-3">${value}</div>
+                    <div class="flex items-center gap-3">
+                        ${changeDisplay}
+                        <span class="text-xs text-muted">${data.lastUpdate}</span>
                     </div>
-                </div>
+                </div>`;
+        }
+
+        function renderDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            const loading = document.getElementById('loading');
+
+            // Section: INDICADORES PRINCIPAIS
+            const principalKeys = ['selic', 'cdi', 'ipcaMensal', 'ipca12Meses'];
+            const cambioKeys = ['usd', 'eur', 'igpm', 'desemprego'];
+            const fiscalKeys = ['dividaPublica', 'reservas'];
+
+            dashboard.innerHTML = `
+                <!-- INDICADORES PRINCIPAIS -->
+                <section>
+                    <div class="flex items-center gap-3 mb-4">
+                        <h2 class="text-sm font-bold tracking-widest text-muted-light uppercase">Indicadores Principais</h2>
+                        <span class="text-[10px] font-semibold tracking-wider text-muted border border-border rounded px-2 py-0.5 uppercase">Fonte: BCB</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${principalKeys.map(k => renderCard(k, economicData[k])).join('')}
+                    </div>
+                </section>
+
+                <!-- CÂMBIO & OUTROS INDICADORES -->
+                <section>
+                    <h2 class="text-sm font-bold tracking-widest text-muted-light uppercase mb-4">Câmbio & Outros Indicadores</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${cambioKeys.map(k => renderCard(k, economicData[k])).join('')}
+                    </div>
+                </section>
+
+                <!-- INDICADORES FISCAIS -->
+                <section>
+                    <h2 class="text-sm font-bold tracking-widest text-muted-light uppercase mb-4">Indicadores Fiscais</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" style="max-width: 50%;">
+                        ${fiscalKeys.map(k => renderCard(k, economicData[k])).join('')}
+                    </div>
+                </section>
+
+                <!-- TAXA SELIC CHARTS -->
+                <section>
+                    <h2 class="text-sm font-bold tracking-widest text-muted-light uppercase mb-4">Taxa SELIC</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="chart-container">
+                            <h3 class="text-base font-semibold text-muted-light mb-4">SELIC - Histórico</h3>
+                            <canvas id="chart-selic-detail"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3 class="text-base font-semibold text-muted-light mb-4">Curva de Juros - Expectativas</h3>
+                            <div class="flex items-center justify-center h-64 text-muted">Dados indisponíveis</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- IPCA ACUMULADO 12 MESES CHART -->
+                <section>
+                    <div class="chart-container">
+                        <h3 class="text-base font-semibold text-muted-light mb-4">IPCA Acumulado 12 Meses</h3>
+                        <canvas id="chart-ipca-detail"></canvas>
+                    </div>
+                </section>
             `;
+
+            loading.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+
+            createCharts();
+            updateTimestamp();
         }
 
-        function formatValue(value, format) {
-            switch (format) {
-                case 'currency':
-                    return formatCurrency(value);
-                case 'percent':
-                    return formatPercent(value);
-                case 'millions':
-                    return 'US$ ' + formatLargeNumber(value) + 'M';
-                default:
-                    return formatNumber(value);
-            }
+        // ── Charts ──────────────────────────────────────
+        function createCharts() {
+            createSelicChart();
+            createIPCAChart();
         }
 
-        // Create mini sparkline charts
-        function createMiniChart(canvasId, history, trend) {
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
+        function createSelicChart() {
+            const data = economicData.selic;
+            if (!data || !data.history.length) return;
 
-            const color = trend === 'up' ? '#22c55e' : trend === 'down' ? '#ef4444' : '#9ca3af';
+            const ctx = document.getElementById('chart-selic-detail');
+            const labels = data.history.map(h => formatDateShort(h.date));
+            const values = data.history.map(h => h.value);
 
-            charts[canvasId] = new Chart(ctx, {
+            charts['selic'] = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: history.map(h => h.date),
+                    labels,
                     datasets: [{
-                        data: history.map(h => h.value),
-                        borderColor: color,
-                        backgroundColor: color + '20',
-                        tension: 0.4,
+                        label: 'SELIC (%)',
+                        data: values,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.08)',
+                        stepped: 'after',
                         fill: true,
                         borderWidth: 2,
                         pointRadius: 0,
                         pointHoverRadius: 4
                     }]
                 },
+                options: getChartOptions('%')
+            });
+        }
+
+        function createIPCAChart() {
+            const data = economicData.ipca12Meses;
+            if (!data || !data.history.length) return;
+
+            const ctx = document.getElementById('chart-ipca-detail');
+            const labels = data.history.map(h => formatDateShort(h.date));
+            const values = data.history.map(h => h.value);
+
+            charts['ipca'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'IPCA 12 meses',
+                        data: values,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#ef4444'
+                    }]
+                },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...getChartOptions('%'),
                     plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: color,
-                            borderWidth: 1
+                        ...getChartOptions('%').plugins,
+                        annotation: {
+                            annotations: {
+                                meta: {
+                                    type: 'line',
+                                    yMin: 4.5,
+                                    yMax: 4.5,
+                                    borderColor: 'rgba(239, 68, 68, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [8, 4],
+                                    label: {
+                                        display: true,
+                                        content: 'Meta 4,5%',
+                                        position: 'end',
+                                        backgroundColor: 'transparent',
+                                        color: '#ef4444',
+                                        font: { size: 12, weight: 'bold', family: 'Inter' },
+                                        padding: 4
+                                    }
+                                }
+                            }
                         }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { display: false }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
                     }
                 }
             });
         }
 
-        // Create detailed charts
-        function createDetailedCharts() {
-            // IPCA 12-month Chart
-            if (economicData.ipca12Meses && economicData.ipca12Meses.history.length > 0) {
-                const ctx = document.getElementById('chart-ipca-detail');
-                charts['ipca-detail'] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: economicData.ipca12Meses.history.map(h => h.date),
-                        datasets: [{
-                            label: 'IPCA 12 Meses (%)',
-                            data: economicData.ipca12Meses.history.map(h => h.value),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: getDetailedChartOptions('IPCA (%)')
-                });
-            }
-
-            // SELIC Evolution Chart
-            if (economicData.selic && economicData.selic.history.length > 0) {
-                const ctx = document.getElementById('chart-selic-detail');
-                charts['selic-detail'] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: economicData.selic.history.map(h => h.date),
-                        datasets: [{
-                            label: 'Taxa SELIC (%)',
-                            data: economicData.selic.history.map(h => h.value),
-                            borderColor: '#22c55e',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            stepped: 'after',
-                            fill: true,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: getDetailedChartOptions('Taxa (%)')
-                });
-            }
-
-            // USD/BRL Chart
-            if (economicData.usd && economicData.usd.history.length > 0) {
-                const ctx = document.getElementById('chart-usd-detail');
-                charts['usd-detail'] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: economicData.usd.history.map(h => h.date),
-                        datasets: [{
-                            label: 'USD/BRL',
-                            data: economicData.usd.history.map(h => h.value),
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            borderWidth: 2
-                        }]
-                    },
-                    options: getDetailedChartOptions('R$')
-                });
-            }
-
-            // Unemployment Chart
-            if (economicData.desemprego && economicData.desemprego.history.length > 0) {
-                const ctx = document.getElementById('chart-unemployment-detail');
-                charts['unemployment-detail'] = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: economicData.desemprego.history.map(h => h.date),
-                        datasets: [{
-                            label: 'Desemprego (%)',
-                            data: economicData.desemprego.history.map(h => h.value),
-                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
-                            borderColor: '#ef4444',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: getDetailedChartOptions('Taxa (%)')
-                });
-            }
-        }
-
-        function getDetailedChartOptions(yAxisLabel) {
+        function getChartOptions(unit) {
             return {
                 responsive: true,
                 maintainAspectRatio: true,
-                aspectRatio: 2,
+                aspectRatio: 2.2,
+                interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: '#9ca3af',
-                            font: { size: 12 }
-                        }
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#e2e8f0',
+                        borderColor: '#334155',
                         borderWidth: 1,
-                        borderColor: 'rgba(59, 130, 246, 0.5)'
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { family: 'JetBrains Mono', size: 13, weight: '600' },
+                        bodyFont: { family: 'JetBrains Mono', size: 13 },
+                        displayColors: true,
+                        boxPadding: 6,
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.dataset.label + ' ' + ctx.parsed.y.toFixed(2);
+                            }
+                        }
                     }
                 },
                 scales: {
                     x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.05)',
-                            drawBorder: false
-                        },
+                        grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
                         ticks: {
-                            color: '#9ca3af',
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
+                            color: '#64748b',
+                            font: { size: 11 },
+                            maxTicksLimit: 12
+                        },
+                        border: { display: false }
                     },
                     y: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.05)',
-                            drawBorder: false
-                        },
+                        grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
                         ticks: {
-                            color: '#9ca3af',
-                            callback: function(value) {
-                                return value.toFixed(2);
-                            }
+                            color: '#64748b',
+                            font: { size: 11 },
+                            callback: v => v.toFixed(v % 1 === 0 ? 0 : 1) + unit
                         },
-                        title: {
-                            display: true,
-                            text: yAxisLabel,
-                            color: '#9ca3af'
-                        }
+                        border: { display: false }
                     }
                 },
-                animation: {
-                    duration: 750
-                }
+                animation: { duration: 750 }
             };
         }
 
-        // Render dashboard
-        async function renderDashboard() {
-            const dashboard = document.getElementById('dashboard');
-            const loading = document.getElementById('loading');
-            const chartsSection = document.getElementById('charts-section');
-
-            const indicators = [
-                economicData.selic,
-                economicData.ipcaMensal,
-                economicData.ipca12Meses,
-                economicData.igpm,
-                economicData.cdi,
-                economicData.usd,
-                economicData.eur,
-                economicData.desemprego,
-                economicData.dividaPublica
-            ];
-
-            // Render cards
-            const cardsHTML = indicators.map((indicator, index) =>
-                renderIndicatorCard(indicator, index)
-            ).join('');
-
-            dashboard.innerHTML = cardsHTML;
-
-            // Show dashboard, hide loading
-            loading.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            chartsSection.classList.remove('hidden');
-
-            // Create mini charts
-            indicators.forEach((indicator, index) => {
-                if (indicator.history && indicator.history.length > 0) {
-                    createMiniChart(`chart-mini-${index}`, indicator.history, indicator.trend);
-                }
-            });
-
-            // Create detailed charts
-            createDetailedCharts();
-
-            // Update last update timestamp
-            updateLastUpdateTimestamp();
-        }
-
-        function updateLastUpdateTimestamp() {
-            const lastUpdate = document.getElementById('last-update');
+        function updateTimestamp() {
+            const el = document.getElementById('last-update');
             const now = new Date();
-            lastUpdate.textContent = `Última atualização: ${formatDateDDMMYYYY(now)} às ${now.toLocaleTimeString('pt-BR')}`;
+            el.textContent = `Última atualização: ${formatDateDDMMYYYY(now)} às ${now.toLocaleTimeString('pt-BR')}`;
         }
 
-        // Auto-refresh every 30 minutes
-        function setupAutoRefresh() {
-            setInterval(async () => {
-                console.log('Auto-refreshing data...');
-                try {
-                    await loadEconomicData();
-                    await renderDashboard();
-                    console.log('Data refreshed successfully');
-                } catch (error) {
-                    console.error('Error refreshing data:', error);
-                }
-            }, 30 * 60 * 1000); // 30 minutes
-        }
+        // ── Auto-refresh ──────────────────────────────
+        setInterval(async () => {
+            try {
+                // Destroy existing charts
+                Object.values(charts).forEach(c => c.destroy());
+                charts = {};
+                await loadEconomicData();
+                renderDashboard();
+            } catch (e) { console.error('Refresh error:', e); }
+        }, 30 * 60 * 1000);
 
-        // Initialize dashboard
-        async function init() {
+        // ── Init ──────────────────────────────────────
+        (async function init() {
             try {
                 await loadEconomicData();
-                await renderDashboard();
-                setupAutoRefresh();
-            } catch (error) {
-                console.error('Failed to initialize dashboard:', error);
+                renderDashboard();
+            } catch (e) {
+                console.error('Init error:', e);
                 document.getElementById('loading').innerHTML = `
-                    <div class="col-span-full text-center text-red-500 p-8">
+                    <div class="text-center text-red-400 py-16">
                         <p class="text-lg font-semibold mb-2">Erro ao carregar dados</p>
-                        <p class="text-sm text-muted">Por favor, verifique sua conexão e tente novamente.</p>
-                    </div>
-                `;
+                        <p class="text-sm text-muted">Verifique sua conexão e recarregue a página.</p>
+                    </div>`;
             }
-        }
-
-        // Start the application
-        init();
+        })();
     </script>
 </body>
 </html>
