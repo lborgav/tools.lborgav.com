@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Painel econômico com indicadores macroeconômicos do Brasil em tempo real - SELIC, IPCA, câmbio e mais">
+    <title>Painel Econômico Brasil | Indicadores Macroeconômicos</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0a0a0a',
+                        card: '#1a1a1a',
+                        border: '#333333',
+                        primary: '#3b82f6',
+                        success: '#22c55e',
+                        danger: '#ef4444',
+                        muted: '#9ca3af'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .ping {
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-glass {
+            background: rgba(26, 26, 26, 0.5);
+            border: 1px solid rgba(51, 51, 51, 0.5);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+
+        .card-glass:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .trend-up {
+            color: #22c55e;
+        }
+
+        .trend-down {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold">Painel Econômico</h1>
+                        <p class="text-xs text-muted hidden sm:block">Indicadores macroeconômicos do Brasil</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="relative flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                        </span>
+                        <span class="text-xs text-muted">Dados ao vivo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <!-- Loading State -->
+        <div id="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="skeleton rounded-lg h-48"></div>
+            <div class="skeleton rounded-lg h-48"></div>
+            <div class="skeleton rounded-lg h-48"></div>
+            <div class="skeleton rounded-lg h-48"></div>
+            <div class="skeleton rounded-lg h-48"></div>
+            <div class="skeleton rounded-lg h-48"></div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div id="dashboard" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in">
+            <!-- Cards will be inserted here -->
+        </div>
+
+        <!-- Detailed Charts Section -->
+        <div id="charts-section" class="hidden mt-12 space-y-8">
+            <h2 class="text-2xl font-bold mb-6">Análise Detalhada</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- IPCA 12-month Chart -->
+                <div class="card-glass rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">IPCA - Últimos 12 Meses</h3>
+                    <canvas id="chart-ipca-detail"></canvas>
+                </div>
+
+                <!-- SELIC Evolution Chart -->
+                <div class="card-glass rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Evolução da Taxa SELIC</h3>
+                    <canvas id="chart-selic-detail"></canvas>
+                </div>
+
+                <!-- USD/BRL Exchange Rate Chart -->
+                <div class="card-glass rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Dólar (USD/BRL) - 6 Meses</h3>
+                    <canvas id="chart-usd-detail"></canvas>
+                </div>
+
+                <!-- Unemployment Trend Chart -->
+                <div class="card-glass rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Taxa de Desemprego</h3>
+                    <canvas id="chart-unemployment-detail"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t border-border/50 text-center text-sm text-muted">
+            <p>Dados fornecidos pelo Banco Central do Brasil (BCB)</p>
+            <p class="mt-2">Atualizado automaticamente a cada 30 minutos</p>
+            <p class="mt-1 text-xs" id="last-update"></p>
+        </footer>
+    </main>
+
+    <script>
+        // BCB API Series Codes
+        const SERIES = {
+            selic: 432,
+            ipcaMensal: 433,
+            ipca12Meses: 13522,
+            igpm: 189,
+            cdi: 4389,
+            usd: 1,
+            eur: 21619,
+            desemprego: 24369,
+            dividaPublica: 4503,
+            reservas: 3546
+        };
+
+        // Global data storage
+        let economicData = {};
+        let charts = {};
+
+        // Utility Functions
+        function formatDateDDMMYYYY(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatDateFromAPI(dateStr) {
+            // API returns DD/MM/YYYY
+            const [day, month, year] = dateStr.split('/');
+            return new Date(year, month - 1, day);
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        function formatPercent(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value) + '%';
+        }
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function formatLargeNumber(value) {
+            if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                return (value / 1000).toFixed(1) + 'K';
+            }
+            return value.toFixed(0);
+        }
+
+        // BCB API Fetching
+        async function fetchBCBSeries(code, lastN = 24) {
+            try {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setMonth(startDate.getMonth() - lastN);
+
+                const startStr = formatDateDDMMYYYY(startDate);
+                const endStr = formatDateDDMMYYYY(endDate);
+
+                const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${code}/dados?formato=json&dataInicial=${startStr}&dataFinal=${endStr}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    console.error(`Error fetching series ${code}:`, response.statusText);
+                    return [];
+                }
+
+                const data = await response.json();
+                return data.map(item => ({
+                    date: item.data,
+                    value: parseFloat(item.valor)
+                }));
+            } catch (error) {
+                console.error(`Failed to fetch series ${code}:`, error);
+                return [];
+            }
+        }
+
+        // Load all economic data
+        async function loadEconomicData() {
+            try {
+                console.log('Loading economic data from BCB API...');
+
+                const [
+                    selicData,
+                    ipcaMensalData,
+                    ipca12MesesData,
+                    igpmData,
+                    cdiData,
+                    usdData,
+                    eurData,
+                    desempregoData,
+                    dividaPublicaData,
+                    reservasData
+                ] = await Promise.all([
+                    fetchBCBSeries(SERIES.selic, 24),
+                    fetchBCBSeries(SERIES.ipcaMensal, 24),
+                    fetchBCBSeries(SERIES.ipca12Meses, 24),
+                    fetchBCBSeries(SERIES.igpm, 24),
+                    fetchBCBSeries(SERIES.cdi, 24),
+                    fetchBCBSeries(SERIES.usd, 6),
+                    fetchBCBSeries(SERIES.eur, 6),
+                    fetchBCBSeries(SERIES.desemprego, 24),
+                    fetchBCBSeries(SERIES.dividaPublica, 24),
+                    fetchBCBSeries(SERIES.reservas, 24)
+                ]);
+
+                // Process data
+                economicData = {
+                    selic: processSeriesData(selicData, 'SELIC', 'percent'),
+                    ipcaMensal: processSeriesData(ipcaMensalData, 'IPCA Mensal', 'percent'),
+                    ipca12Meses: processSeriesData(ipca12MesesData, 'IPCA 12 Meses', 'percent'),
+                    igpm: processSeriesData(igpmData, 'IGP-M', 'percent'),
+                    cdi: processSeriesData(cdiData, 'CDI', 'percent'),
+                    usd: processSeriesData(usdData, 'Dólar (USD/BRL)', 'currency'),
+                    eur: processSeriesData(eurData, 'Euro (EUR/BRL)', 'currency'),
+                    desemprego: processSeriesData(desempregoData, 'Desemprego', 'percent'),
+                    dividaPublica: processSeriesData(dividaPublicaData, 'Dívida Pública/PIB', 'percent'),
+                    reservas: processSeriesData(reservasData, 'Reservas Int.', 'millions')
+                };
+
+                console.log('Economic data loaded successfully');
+                return economicData;
+            } catch (error) {
+                console.error('Error loading economic data:', error);
+                throw error;
+            }
+        }
+
+        function processSeriesData(data, name, format) {
+            if (!data || data.length === 0) {
+                return {
+                    name,
+                    current: null,
+                    previous: null,
+                    change: 0,
+                    trend: 'neutral',
+                    history: [],
+                    format,
+                    lastUpdate: null
+                };
+            }
+
+            const current = data[data.length - 1];
+            const previous = data.length > 1 ? data[data.length - 2] : current;
+            const change = previous.value !== 0 ? ((current.value - previous.value) / previous.value) * 100 : 0;
+
+            // Determine trend (for inflation-like metrics, lower is better)
+            let trend = 'neutral';
+            if (change > 0) {
+                trend = ['IPCA Mensal', 'IPCA 12 Meses', 'IGP-M', 'Desemprego', 'Dívida Pública/PIB'].includes(name) ? 'down' : 'up';
+            } else if (change < 0) {
+                trend = ['IPCA Mensal', 'IPCA 12 Meses', 'IGP-M', 'Desemprego', 'Dívida Pública/PIB'].includes(name) ? 'up' : 'down';
+            }
+
+            return {
+                name,
+                current: current.value,
+                previous: previous.value,
+                change,
+                trend,
+                history: data,
+                format,
+                lastUpdate: current.date
+            };
+        }
+
+        // Render indicator cards
+        function renderIndicatorCard(indicator, index) {
+            const { name, current, previous, change, trend, format, lastUpdate } = indicator;
+
+            if (current === null) {
+                return `
+                    <div class="card-glass rounded-lg p-6">
+                        <h3 class="text-sm font-medium text-muted mb-2">${name}</h3>
+                        <div class="text-gray-500">Dados indisponíveis</div>
+                    </div>
+                `;
+            }
+
+            const formattedValue = formatValue(current, format);
+            const trendClass = trend === 'up' ? 'trend-up' : trend === 'down' ? 'trend-down' : 'text-muted';
+            const trendIcon = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→';
+
+            return `
+                <div class="card-glass rounded-lg p-6 fade-in" style="animation-delay: ${index * 0.05}s">
+                    <h3 class="text-sm font-medium text-muted mb-2">${name}</h3>
+                    <div class="text-3xl font-bold mb-2 font-mono">${formattedValue}</div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="${trendClass} text-sm font-medium">
+                            ${trendIcon} ${Math.abs(change).toFixed(2)}%
+                        </span>
+                        <span class="text-xs text-muted">${lastUpdate || 'N/A'}</span>
+                    </div>
+                    <div class="h-16">
+                        <canvas id="chart-mini-${index}"></canvas>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatValue(value, format) {
+            switch (format) {
+                case 'currency':
+                    return formatCurrency(value);
+                case 'percent':
+                    return formatPercent(value);
+                case 'millions':
+                    return 'US$ ' + formatLargeNumber(value) + 'M';
+                default:
+                    return formatNumber(value);
+            }
+        }
+
+        // Create mini sparkline charts
+        function createMiniChart(canvasId, history, trend) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+
+            const color = trend === 'up' ? '#22c55e' : trend === 'down' ? '#ef4444' : '#9ca3af';
+
+            charts[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map(h => h.date),
+                    datasets: [{
+                        data: history.map(h => h.value),
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: color,
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // Create detailed charts
+        function createDetailedCharts() {
+            // IPCA 12-month Chart
+            if (economicData.ipca12Meses && economicData.ipca12Meses.history.length > 0) {
+                const ctx = document.getElementById('chart-ipca-detail');
+                charts['ipca-detail'] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: economicData.ipca12Meses.history.map(h => h.date),
+                        datasets: [{
+                            label: 'IPCA 12 Meses (%)',
+                            data: economicData.ipca12Meses.history.map(h => h.value),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: getDetailedChartOptions('IPCA (%)')
+                });
+            }
+
+            // SELIC Evolution Chart
+            if (economicData.selic && economicData.selic.history.length > 0) {
+                const ctx = document.getElementById('chart-selic-detail');
+                charts['selic-detail'] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: economicData.selic.history.map(h => h.date),
+                        datasets: [{
+                            label: 'Taxa SELIC (%)',
+                            data: economicData.selic.history.map(h => h.value),
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            stepped: 'after',
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: getDetailedChartOptions('Taxa (%)')
+                });
+            }
+
+            // USD/BRL Chart
+            if (economicData.usd && economicData.usd.history.length > 0) {
+                const ctx = document.getElementById('chart-usd-detail');
+                charts['usd-detail'] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: economicData.usd.history.map(h => h.date),
+                        datasets: [{
+                            label: 'USD/BRL',
+                            data: economicData.usd.history.map(h => h.value),
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: getDetailedChartOptions('R$')
+                });
+            }
+
+            // Unemployment Chart
+            if (economicData.desemprego && economicData.desemprego.history.length > 0) {
+                const ctx = document.getElementById('chart-unemployment-detail');
+                charts['unemployment-detail'] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: economicData.desemprego.history.map(h => h.date),
+                        datasets: [{
+                            label: 'Desemprego (%)',
+                            data: economicData.desemprego.history.map(h => h.value),
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: getDetailedChartOptions('Taxa (%)')
+                });
+            }
+        }
+
+        function getDetailedChartOptions(yAxisLabel) {
+            return {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#9ca3af',
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderWidth: 1,
+                        borderColor: 'rgba(59, 130, 246, 0.5)'
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#9ca3af',
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#9ca3af',
+                            callback: function(value) {
+                                return value.toFixed(2);
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: yAxisLabel,
+                            color: '#9ca3af'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 750
+                }
+            };
+        }
+
+        // Render dashboard
+        async function renderDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            const loading = document.getElementById('loading');
+            const chartsSection = document.getElementById('charts-section');
+
+            const indicators = [
+                economicData.selic,
+                economicData.ipcaMensal,
+                economicData.ipca12Meses,
+                economicData.igpm,
+                economicData.cdi,
+                economicData.usd,
+                economicData.eur,
+                economicData.desemprego,
+                economicData.dividaPublica
+            ];
+
+            // Render cards
+            const cardsHTML = indicators.map((indicator, index) =>
+                renderIndicatorCard(indicator, index)
+            ).join('');
+
+            dashboard.innerHTML = cardsHTML;
+
+            // Show dashboard, hide loading
+            loading.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            chartsSection.classList.remove('hidden');
+
+            // Create mini charts
+            indicators.forEach((indicator, index) => {
+                if (indicator.history && indicator.history.length > 0) {
+                    createMiniChart(`chart-mini-${index}`, indicator.history, indicator.trend);
+                }
+            });
+
+            // Create detailed charts
+            createDetailedCharts();
+
+            // Update last update timestamp
+            updateLastUpdateTimestamp();
+        }
+
+        function updateLastUpdateTimestamp() {
+            const lastUpdate = document.getElementById('last-update');
+            const now = new Date();
+            lastUpdate.textContent = `Última atualização: ${formatDateDDMMYYYY(now)} às ${now.toLocaleTimeString('pt-BR')}`;
+        }
+
+        // Auto-refresh every 30 minutes
+        function setupAutoRefresh() {
+            setInterval(async () => {
+                console.log('Auto-refreshing data...');
+                try {
+                    await loadEconomicData();
+                    await renderDashboard();
+                    console.log('Data refreshed successfully');
+                } catch (error) {
+                    console.error('Error refreshing data:', error);
+                }
+            }, 30 * 60 * 1000); // 30 minutes
+        }
+
+        // Initialize dashboard
+        async function init() {
+            try {
+                await loadEconomicData();
+                await renderDashboard();
+                setupAutoRefresh();
+            } catch (error) {
+                console.error('Failed to initialize dashboard:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="col-span-full text-center text-red-500 p-8">
+                        <p class="text-lg font-semibold mb-2">Erro ao carregar dados</p>
+                        <p class="text-sm text-muted">Por favor, verifique sua conexão e tente novamente.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
