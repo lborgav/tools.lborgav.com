@@ -8,8 +8,8 @@ This project is inspired by [Simon Willison's Tools](https://tools.simonwillison
 
 ## Available Tools
 
-- **[dados-econ-br](./dados-econ-br)** — Real-time Brazilian economic indicators dashboard powered by Central Bank data
-- **[whatsapp-exporter-viewer](./whatsapp-exporter-viewer)** — View and analyze exported WhatsApp chat history
+- **[dados-econ-br](./dados-econ-br)** — Brazilian economic indicators dashboard
+- **[whatsapp-exporter-viewer](./whatsapp-exporter-viewer)** — WhatsApp chat export viewer
 
 ## Running Locally
 
