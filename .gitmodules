@@ -1,0 +1,3 @@
+[submodule "whatsapp-exporter-viewer"]
+	path = whatsapp-exporter-viewer
+	url = https://github.com/lborgav/whatsapp-export-viewer
