@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paste or upload JSON to view a beautified, syntax-highlighted version">
+    <title>JSON Viewer | tools.lborgav</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .json-key { color: #881391; }
+        .json-string { color: #0b7285; }
+        .json-number { color: #c92a2a; }
+        .json-boolean { color: #e67700; }
+        .json-null { color: #868e96; }
+        .json-bracket { color: #495057; }
+    </style>
+</head>
+<body class="bg-white min-h-screen text-slate-800">
+    <nav class="max-w-3xl mx-auto px-6 py-8 flex items-center justify-between">
+        <a href="https://lborgav.com" class="text-xl font-bold text-black hover:underline">lborgav</a>
+        <div class="flex items-center space-x-5 text-sm font-medium">
+            <a href="/" class="text-slate-600 hover:underline">tools</a>
+            <a href="https://github.com/lborgav" class="text-slate-600 hover:underline">github</a>
+            <a href="https://linkedin.com/in/lborgav" class="text-slate-600 hover:underline">linkedin</a>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-6 mt-4">
+        <h1 class="text-lg font-medium mb-6">JSON Viewer</h1>
+
+        <!-- Input -->
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <label for="json-input" class="text-sm font-medium text-slate-600">Input</label>
+                <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
+                    Upload .json
+                    <input type="file" id="file-upload" accept=".json,application/json" class="hidden">
+                </label>
+            </div>
+            <textarea
+                id="json-input"
+                class="w-full h-48 p-4 font-mono text-sm border border-slate-200 rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-slate-300"
+                placeholder='Paste JSON here...'
+                spellcheck="false"
+            ></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-3 mb-6">
+            <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
+                Beautify
+            </button>
+            <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 hidden">
+                Copy
+            </button>
+            <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+                Clear
+            </button>
+            <span id="error-msg" class="text-sm text-red-600 ml-2"></span>
+        </div>
+
+        <!-- Output -->
+        <div id="output-container" class="hidden mb-12">
+            <p class="text-sm font-medium text-slate-600 mb-2">Output</p>
+            <pre id="json-output" class="p-4 bg-slate-50 border border-slate-200 rounded-lg overflow-x-auto text-sm font-mono leading-relaxed"></pre>
+        </div>
+    </main>
+
+    <script>
+        const input = document.getElementById('json-input');
+        const output = document.getElementById('json-output');
+        const outputContainer = document.getElementById('output-container');
+        const errorMsg = document.getElementById('error-msg');
+        const btnBeautify = document.getElementById('btn-beautify');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnClear = document.getElementById('btn-clear');
+        const fileUpload = document.getElementById('file-upload');
+
+        function syntaxHighlight(json) {
+            const escaped = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return escaped.replace(
+                /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+                function (match) {
+                    let cls = 'json-number';
+                    if (/^"/.test(match)) {
+                        cls = /:$/.test(match) ? 'json-key' : 'json-string';
+                    } else if (/true|false/.test(match)) {
+                        cls = 'json-boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'json-null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                }
+            );
+        }
+
+        function beautify() {
+            const raw = input.value.trim();
+            errorMsg.textContent = '';
+            if (!raw) {
+                errorMsg.textContent = 'Input is empty.';
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                const pretty = JSON.stringify(parsed, null, 2);
+                output.innerHTML = syntaxHighlight(pretty);
+                outputContainer.classList.remove('hidden');
+                btnCopy.classList.remove('hidden');
+            } catch (e) {
+                outputContainer.classList.add('hidden');
+                btnCopy.classList.add('hidden');
+                errorMsg.textContent = e.message;
+            }
+        }
+
+        btnBeautify.addEventListener('click', beautify);
+
+        input.addEventListener('keydown', function (e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                beautify();
+            }
+        });
+
+        btnCopy.addEventListener('click', function () {
+            const raw = input.value.trim();
+            try {
+                const pretty = JSON.stringify(JSON.parse(raw), null, 2);
+                navigator.clipboard.writeText(pretty).then(function () {
+                    btnCopy.textContent = 'Copied!';
+                    setTimeout(function () { btnCopy.textContent = 'Copy'; }, 1500);
+                });
+            } catch (_) {}
+        });
+
+        btnClear.addEventListener('click', function () {
+            input.value = '';
+            output.innerHTML = '';
+            outputContainer.classList.add('hidden');
+            btnCopy.classList.add('hidden');
+            errorMsg.textContent = '';
+            input.focus();
+        });
+
+        fileUpload.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                input.value = evt.target.result;
+                beautify();
+            };
+            reader.readAsText(file);
+            fileUpload.value = '';
+        });
+    </script>
+</body>
+</html>

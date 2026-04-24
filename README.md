@@ -10,6 +10,7 @@ This project is inspired by [Simon Willison's Tools](https://tools.simonwillison
 
 - **[dados-econ-br](./dados-econ-br)** — Brazilian economic indicators dashboard
 - **[whatsapp-exporter-viewer](./whatsapp-exporter-viewer)** — WhatsApp chat export viewer
+- **[json-viewer](./json-viewer)** — Beautify and view JSON with syntax highlighting
 
 ## Running Locally
 
