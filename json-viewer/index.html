@@ -12,57 +12,65 @@
         .json-number { color: #c92a2a; }
         .json-boolean { color: #e67700; }
         .json-null { color: #868e96; }
-        .json-bracket { color: #495057; }
+
+        .json-tree details { display: inline; }
+        .json-tree summary { display: inline; cursor: pointer; list-style: none; }
+        .json-tree summary::-webkit-details-marker { display: none; }
+        .json-tree summary::marker { display: none; content: ''; }
+        .json-tree summary .toggle { user-select: none; color: #adb5bd; font-size: 0.7em; vertical-align: middle; margin-right: 2px; }
+        .json-tree details[open] > summary .toggle { content: ''; }
+        .json-tree .collapsed-preview { color: #adb5bd; font-style: italic; }
+        .json-tree .indent { padding-left: 1.25em; }
     </style>
 </head>
 <body class="bg-white min-h-screen text-slate-800">
-    <nav class="max-w-3xl mx-auto px-6 py-8 flex items-center justify-between">
-        <a href="https://lborgav.com" class="text-xl font-bold text-black hover:underline">lborgav</a>
-        <div class="flex items-center space-x-5 text-sm font-medium">
-            <a href="/" class="text-slate-600 hover:underline">tools</a>
-            <a href="https://github.com/lborgav" class="text-slate-600 hover:underline">github</a>
-            <a href="https://linkedin.com/in/lborgav" class="text-slate-600 hover:underline">linkedin</a>
+    <main class="mx-auto px-6 mt-6 mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-lg font-medium">JSON Viewer</h1>
+            <span id="error-msg" class="text-sm text-red-600"></span>
         </div>
-    </nav>
 
-    <main class="max-w-3xl mx-auto px-6 mt-4">
-        <h1 class="text-lg font-medium mb-6">JSON Viewer</h1>
-
-        <!-- Input -->
-        <div class="mb-4">
-            <div class="flex items-center justify-between mb-2">
-                <label for="json-input" class="text-sm font-medium text-slate-600">Input</label>
-                <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
-                    Upload .json
-                    <input type="file" id="file-upload" accept=".json,application/json" class="hidden">
-                </label>
+        <!-- Side-by-side panels -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Input panel -->
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="json-input" class="text-sm font-medium text-slate-600">Input</label>
+                    <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
+                        Upload .json
+                        <input type="file" id="file-upload" accept=".json,application/json" class="hidden">
+                    </label>
+                </div>
+                <textarea
+                    id="json-input"
+                    class="h-[60vh] max-h-[600px] p-4 font-mono text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    placeholder='Paste JSON here...'
+                    spellcheck="false"
+                ></textarea>
+                <div class="flex items-center gap-3 mt-3">
+                    <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
+                        Beautify
+                    </button>
+                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 hidden">
+                        Copy
+                    </button>
+                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+                        Clear
+                    </button>
+                </div>
             </div>
-            <textarea
-                id="json-input"
-                class="w-full h-48 p-4 font-mono text-sm border border-slate-200 rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder='Paste JSON here...'
-                spellcheck="false"
-            ></textarea>
-        </div>
 
-        <!-- Actions -->
-        <div class="flex items-center gap-3 mb-6">
-            <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
-                Beautify
-            </button>
-            <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 hidden">
-                Copy
-            </button>
-            <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
-                Clear
-            </button>
-            <span id="error-msg" class="text-sm text-red-600 ml-2"></span>
-        </div>
-
-        <!-- Output -->
-        <div id="output-container" class="hidden mb-12">
-            <p class="text-sm font-medium text-slate-600 mb-2">Output</p>
-            <pre id="json-output" class="p-4 bg-slate-50 border border-slate-200 rounded-lg overflow-x-auto text-sm font-mono leading-relaxed"></pre>
+            <!-- Output panel -->
+            <div id="output-container" class="flex flex-col invisible">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm font-medium text-slate-600">Output</p>
+                    <div class="flex items-center gap-3">
+                        <button id="btn-expand-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Expand all</button>
+                        <button id="btn-collapse-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Collapse all</button>
+                    </div>
+                </div>
+                <pre id="json-output" class="json-tree h-[60vh] max-h-[600px] p-4 bg-slate-50 border border-slate-200 rounded-lg overflow-auto text-sm font-mono leading-relaxed"></pre>
+            </div>
         </div>
     </main>
 
@@ -75,23 +83,61 @@
         const btnCopy = document.getElementById('btn-copy');
         const btnClear = document.getElementById('btn-clear');
         const fileUpload = document.getElementById('file-upload');
+        const btnExpandAll = document.getElementById('btn-expand-all');
+        const btnCollapseAll = document.getElementById('btn-collapse-all');
 
-        function syntaxHighlight(json) {
-            const escaped = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return escaped.replace(
-                /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
-                function (match) {
-                    let cls = 'json-number';
-                    if (/^"/.test(match)) {
-                        cls = /:$/.test(match) ? 'json-key' : 'json-string';
-                    } else if (/true|false/.test(match)) {
-                        cls = 'json-boolean';
-                    } else if (/null/.test(match)) {
-                        cls = 'json-null';
-                    }
-                    return '<span class="' + cls + '">' + match + '</span>';
-                }
-            );
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function collapsedPreview(value) {
+            if (Array.isArray(value)) {
+                const len = value.length;
+                return '<span class="collapsed-preview">' + len + ' item' + (len !== 1 ? 's' : '') + '</span>';
+            }
+            const keys = Object.keys(value);
+            return '<span class="collapsed-preview">' + keys.length + ' key' + (keys.length !== 1 ? 's' : '') + '</span>';
+        }
+
+        function renderValue(value) {
+            if (value === null) return '<span class="json-null">null</span>';
+            if (typeof value === 'boolean') return '<span class="json-boolean">' + value + '</span>';
+            if (typeof value === 'number') return '<span class="json-number">' + value + '</span>';
+            if (typeof value === 'string') return '<span class="json-string">"' + escapeHtml(value) + '"</span>';
+
+            if (Array.isArray(value)) {
+                if (value.length === 0) return '[]';
+                let html = '<details open>';
+                html += '<summary><span class="toggle">&#9660;</span>[' + collapsedPreview(value) + ']</summary>';
+                html += '<div class="indent">';
+                value.forEach(function (item, i) {
+                    html += renderValue(item);
+                    if (i < value.length - 1) html += ',';
+                    html += '\n';
+                });
+                html += '</div>]';
+                html += '</details>';
+                return html;
+            }
+
+            if (typeof value === 'object') {
+                const keys = Object.keys(value);
+                if (keys.length === 0) return '{}';
+                let html = '<details open>';
+                html += '<summary><span class="toggle">&#9660;</span>{' + collapsedPreview(value) + '}</summary>';
+                html += '<div class="indent">';
+                keys.forEach(function (key, i) {
+                    html += '<span class="json-key">"' + escapeHtml(key) + '"</span>: ';
+                    html += renderValue(value[key]);
+                    if (i < keys.length - 1) html += ',';
+                    html += '\n';
+                });
+                html += '</div>}';
+                html += '</details>';
+                return html;
+            }
+
+            return String(value);
         }
 
         function beautify() {
@@ -103,12 +149,25 @@
             }
             try {
                 const parsed = JSON.parse(raw);
-                const pretty = JSON.stringify(parsed, null, 2);
-                output.innerHTML = syntaxHighlight(pretty);
-                outputContainer.classList.remove('hidden');
+                output.innerHTML = renderValue(parsed);
+                outputContainer.classList.remove('invisible');
                 btnCopy.classList.remove('hidden');
+
+                // Update toggle arrows on open/close
+                output.querySelectorAll('details').forEach(function (d) {
+                    d.addEventListener('toggle', function () {
+                        const toggle = d.querySelector(':scope > summary .toggle');
+                        toggle.innerHTML = d.open ? '&#9660;' : '&#9654;';
+                        // Show/hide the collapsed preview
+                        const preview = d.querySelector(':scope > summary .collapsed-preview');
+                        if (preview) preview.style.display = d.open ? 'none' : 'inline';
+                    });
+                    // Initially hide preview since details are open
+                    const preview = d.querySelector(':scope > summary .collapsed-preview');
+                    if (preview) preview.style.display = 'none';
+                });
             } catch (e) {
-                outputContainer.classList.add('hidden');
+                outputContainer.classList.add('invisible');
                 btnCopy.classList.add('hidden');
                 errorMsg.textContent = e.message;
             }
@@ -137,7 +196,7 @@
         btnClear.addEventListener('click', function () {
             input.value = '';
             output.innerHTML = '';
-            outputContainer.classList.add('hidden');
+            outputContainer.classList.add('invisible');
             btnCopy.classList.add('hidden');
             errorMsg.textContent = '';
             input.focus();
@@ -153,6 +212,26 @@
             };
             reader.readAsText(file);
             fileUpload.value = '';
+        });
+
+        btnExpandAll.addEventListener('click', function () {
+            output.querySelectorAll('details').forEach(function (d) {
+                d.open = true;
+                const toggle = d.querySelector(':scope > summary .toggle');
+                if (toggle) toggle.innerHTML = '&#9660;';
+                const preview = d.querySelector(':scope > summary .collapsed-preview');
+                if (preview) preview.style.display = 'none';
+            });
+        });
+
+        btnCollapseAll.addEventListener('click', function () {
+            output.querySelectorAll('details').forEach(function (d) {
+                d.open = false;
+                const toggle = d.querySelector(':scope > summary .toggle');
+                if (toggle) toggle.innerHTML = '&#9654;';
+                const preview = d.querySelector(':scope > summary .collapsed-preview');
+                if (preview) preview.style.display = 'inline';
+            });
         });
     </script>
 </body>
