@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paste or upload JSONL to view each line as a beautified, syntax-highlighted JSON tree">
+    <title>JSONL Viewer | tools.lborgav</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
+    <style>
+        .json-key     { color: #881391; }
+        .json-string  { color: #0b7285; }
+        .json-number  { color: #c92a2a; }
+        .json-boolean { color: #e67700; }
+        .json-null    { color: #868e96; }
+
+        .json-tree details { display: inline; }
+        .json-tree summary { display: inline; cursor: pointer; list-style: none; }
+        .json-tree summary::-webkit-details-marker { display: none; }
+        .json-tree summary::marker { display: none; content: ''; }
+        .json-tree summary .toggle { user-select: none; color: #adb5bd; font-size: 0.7em; vertical-align: middle; margin-right: 2px; }
+        .json-tree .collapsed-preview { color: #adb5bd; font-style: italic; }
+        .json-tree .indent { padding-left: 1.25em; }
+
+        .line-card { border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+        .line-card-header { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.5rem 0.75rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 0.5rem 0.5rem 0 0; }
+        .line-card.error-card { border-left: 3px solid #fa5252; }
+        .line-card.error-card .line-card-header { background: #fff5f5; }
+        .line-badge { font-size: 0.7rem; font-weight: 600; color: #94a3b8; font-family: monospace; min-width: 2rem; }
+        .line-body { padding: 0.5rem 0.75rem; }
+
+        /* KaTeX display math shouldn't break the monospace flow */
+        .json-string .katex-display { display: inline-block; margin: 0; }
+        .json-string .katex { font-size: 1em; }
+
+        /* Toggle switch */
+        .toggle-switch { position: relative; display: inline-block; width: 2rem; height: 1.1rem; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; cursor: pointer; transition: background 0.15s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 0.8rem; height: 0.8rem; left: 0.15rem; bottom: 0.15rem; background: white; border-radius: 50%; transition: transform 0.15s; }
+        input:checked + .toggle-slider { background: #334155; }
+        input:checked + .toggle-slider::before { transform: translateX(0.9rem); }
+    </style>
+</head>
+<body class="bg-white min-h-screen text-slate-800">
+    <main class="mx-auto px-6 mt-6 mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-lg font-medium">JSONL Viewer</h1>
+            <span id="error-msg" class="text-sm text-red-600"></span>
+        </div>
+
+        <!-- Side-by-side panels -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Input panel -->
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="jsonl-input" class="text-sm font-medium text-slate-600">Input</label>
+                    <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
+                        Upload .jsonl
+                        <input type="file" id="file-upload" accept=".jsonl,.json,.txt" class="hidden">
+                    </label>
+                </div>
+                <textarea
+                    id="jsonl-input"
+                    class="h-[60vh] max-h-[600px] p-4 font-mono text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    placeholder='Paste JSONL here (one JSON object per line)...'
+                    spellcheck="false"
+                ></textarea>
+                <div class="flex items-center gap-3 mt-3">
+                    <button id="btn-parse" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
+                        Parse
+                    </button>
+                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 hidden">
+                        Copy as JSONL
+                    </button>
+                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output panel -->
+            <div id="output-container" class="flex flex-col invisible">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm font-medium text-slate-600">
+                        Output <span id="line-count" class="text-slate-400 font-normal"></span>
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-1.5 text-sm text-slate-500 cursor-pointer select-none">
+                            <span>Render Math</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-math">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </label>
+                        <button id="btn-expand-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Expand all</button>
+                        <button id="btn-collapse-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Collapse all</button>
+                    </div>
+                </div>
+                <div id="jsonl-output" class="json-tree h-[60vh] max-h-[600px] p-2 bg-slate-50 border border-slate-200 rounded-lg overflow-auto text-sm font-mono leading-relaxed"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const input       = document.getElementById('jsonl-input');
+        const output      = document.getElementById('jsonl-output');
+        const outputContainer = document.getElementById('output-container');
+        const errorMsg    = document.getElementById('error-msg');
+        const lineCount   = document.getElementById('line-count');
+        const btnParse    = document.getElementById('btn-parse');
+        const btnCopy     = document.getElementById('btn-copy');
+        const btnClear    = document.getElementById('btn-clear');
+        const fileUpload  = document.getElementById('file-upload');
+        const btnExpandAll   = document.getElementById('btn-expand-all');
+        const btnCollapseAll = document.getElementById('btn-collapse-all');
+        const toggleMath  = document.getElementById('toggle-math');
+
+        // Parsed line data kept in memory for re-render on toggle
+        let parsedLines = [];
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function collapsedPreview(value) {
+            if (Array.isArray(value)) {
+                const len = value.length;
+                return '<span class="collapsed-preview">' + len + ' item' + (len !== 1 ? 's' : '') + '</span>';
+            }
+            const keys = Object.keys(value);
+            return '<span class="collapsed-preview">' + keys.length + ' key' + (keys.length !== 1 ? 's' : '') + '</span>';
+        }
+
+        function renderValue(value) {
+            if (value === null) return '<span class="json-null">null</span>';
+            if (typeof value === 'boolean') return '<span class="json-boolean">' + value + '</span>';
+            if (typeof value === 'number') return '<span class="json-number">' + value + '</span>';
+            if (typeof value === 'string') return '<span class="json-string">"' + escapeHtml(value) + '"</span>';
+
+            if (Array.isArray(value)) {
+                if (value.length === 0) return '[]';
+                let html = '<details open>';
+                html += '<summary><span class="toggle">&#9660;</span>[' + collapsedPreview(value) + ']</summary>';
+                html += '<div class="indent">';
+                value.forEach(function(item, i) {
+                    html += renderValue(item);
+                    if (i < value.length - 1) html += ',';
+                    html += '\n';
+                });
+                html += '</div>]</details>';
+                return html;
+            }
+
+            if (typeof value === 'object') {
+                const keys = Object.keys(value);
+                if (keys.length === 0) return '{}';
+                let html = '<details open>';
+                html += '<summary><span class="toggle">&#9660;</span>{' + collapsedPreview(value) + '}</summary>';
+                html += '<div class="indent">';
+                keys.forEach(function(key, i) {
+                    html += '<span class="json-key">"' + escapeHtml(key) + '"</span>: ';
+                    html += renderValue(value[key]);
+                    if (i < keys.length - 1) html += ',';
+                    html += '\n';
+                });
+                html += '</div>}</details>';
+                return html;
+            }
+
+            return String(value);
+        }
+
+        function renderLines() {
+            if (parsedLines.length === 0) return;
+
+            let html = '';
+            parsedLines.forEach(function(entry) {
+                if (entry.error) {
+                    html += '<div class="line-card error-card">';
+                    html += '<div class="line-card-header">';
+                    html += '<span class="line-badge">#' + entry.lineNum + '</span>';
+                    html += '<span class="text-xs text-red-500">' + escapeHtml(entry.error) + '</span>';
+                    html += '</div>';
+                    html += '<div class="line-body text-xs text-slate-400">' + escapeHtml(entry.raw) + '</div>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="line-card">';
+                    html += '<div class="line-card-header">';
+                    html += '<span class="line-badge">#' + entry.lineNum + '</span>';
+                    html += '</div>';
+                    html += '<div class="line-body">' + renderValue(entry.value) + '</div>';
+                    html += '</div>';
+                }
+            });
+
+            output.innerHTML = html;
+
+            // Wire up toggle arrows for all details elements
+            output.querySelectorAll('details').forEach(function(d) {
+                d.addEventListener('toggle', function() {
+                    const toggle = d.querySelector(':scope > summary .toggle');
+                    if (toggle) toggle.innerHTML = d.open ? '&#9660;' : '&#9654;';
+                    const preview = d.querySelector(':scope > summary .collapsed-preview');
+                    if (preview) preview.style.display = d.open ? 'none' : 'inline';
+                });
+                const preview = d.querySelector(':scope > summary .collapsed-preview');
+                if (preview) preview.style.display = 'none';
+            });
+
+            if (toggleMath.checked) applyMath();
+        }
+
+        function applyMath() {
+            // KaTeX may not be loaded yet if CDN is slow; guard defensively
+            if (typeof renderMathInElement === 'undefined') return;
+            output.querySelectorAll('.json-string').forEach(function(el) {
+                renderMathInElement(el, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true  },
+                        { left: '$',  right: '$',  display: false },
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true  },
+                    ],
+                    throwOnError: false,
+                });
+            });
+        }
+
+        function parse() {
+            const raw = input.value;
+            errorMsg.textContent = '';
+
+            if (!raw.trim()) {
+                errorMsg.textContent = 'Input is empty.';
+                return;
+            }
+
+            const lines = raw.split('\n');
+            parsedLines = [];
+            let realLineNum = 0;
+
+            lines.forEach(function(line) {
+                const trimmed = line.trim();
+                if (!trimmed) return;
+                realLineNum++;
+                try {
+                    parsedLines.push({ lineNum: realLineNum, value: JSON.parse(trimmed) });
+                } catch (e) {
+                    parsedLines.push({ lineNum: realLineNum, raw: trimmed, error: e.message });
+                }
+            });
+
+            if (parsedLines.length === 0) {
+                errorMsg.textContent = 'No non-empty lines found.';
+                return;
+            }
+
+            const successCount = parsedLines.filter(function(e) { return !e.error; }).length;
+            const failCount    = parsedLines.length - successCount;
+            lineCount.textContent = '(' + parsedLines.length + ' line' + (parsedLines.length !== 1 ? 's' : '') +
+                (failCount ? ', ' + failCount + ' error' + (failCount !== 1 ? 's' : '') : '') + ')';
+
+            outputContainer.classList.remove('invisible');
+            btnCopy.classList.remove('hidden');
+            renderLines();
+        }
+
+        toggleMath.addEventListener('change', function() {
+            if (parsedLines.length > 0) renderLines();
+        });
+
+        btnParse.addEventListener('click', parse);
+
+        input.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                parse();
+            }
+        });
+
+        btnCopy.addEventListener('click', function() {
+            const jsonl = parsedLines
+                .filter(function(e) { return !e.error; })
+                .map(function(e) { return JSON.stringify(e.value); })
+                .join('\n');
+            navigator.clipboard.writeText(jsonl).then(function() {
+                btnCopy.textContent = 'Copied!';
+                setTimeout(function() { btnCopy.textContent = 'Copy as JSONL'; }, 1500);
+            });
+        });
+
+        btnClear.addEventListener('click', function() {
+            input.value = '';
+            output.innerHTML = '';
+            parsedLines = [];
+            outputContainer.classList.add('invisible');
+            btnCopy.classList.add('hidden');
+            errorMsg.textContent = '';
+            lineCount.textContent = '';
+            input.focus();
+        });
+
+        fileUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                input.value = evt.target.result;
+                parse();
+            };
+            reader.readAsText(file);
+            fileUpload.value = '';
+        });
+
+        btnExpandAll.addEventListener('click', function() {
+            output.querySelectorAll('details').forEach(function(d) {
+                d.open = true;
+                const toggle = d.querySelector(':scope > summary .toggle');
+                if (toggle) toggle.innerHTML = '&#9660;';
+                const preview = d.querySelector(':scope > summary .collapsed-preview');
+                if (preview) preview.style.display = 'none';
+            });
+        });
+
+        btnCollapseAll.addEventListener('click', function() {
+            output.querySelectorAll('details').forEach(function(d) {
+                d.open = false;
+                const toggle = d.querySelector(':scope > summary .toggle');
+                if (toggle) toggle.innerHTML = '&#9654;';
+                const preview = d.querySelector(':scope > summary .collapsed-preview');
+                if (preview) preview.style.display = 'inline';
+            });
+        });
+    </script>
+</body>
+</html>
