@@ -23,65 +23,58 @@
         .json-tree .indent { padding-left: 1.25em; }
     </style>
 </head>
-<body class="bg-white min-h-screen text-[#494848]">
-    <header class="w-full bg-[#494848] text-[#D4D4D4] px-4 py-3 flex items-center">
+<body class="bg-white h-screen flex flex-col text-[#494848] overflow-hidden">
+    <header class="shrink-0 w-full bg-[#494848] text-[#D4D4D4] px-4 py-3 flex items-center">
         <a href="/" class="hover:text-white text-xl leading-none w-6" title="Back to tools" aria-label="Back">&larr;</a>
         <h1 class="flex-1 text-center text-sm font-medium tracking-wide">JSON VIEWER</h1>
         <span class="w-6"></span>
     </header>
-    <main class="w-full px-6 mt-6 mb-12">
-        <div class="flex items-center justify-end mb-4">
-            <span id="error-msg" class="text-sm text-[#636363]"></span>
-        </div>
-
-        <!-- Side-by-side panels -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            <!-- Input panel -->
-            <div class="flex flex-col">
-                <div class="flex items-center justify-between mb-2">
-                    <label for="json-input" class="text-sm font-medium text-[#636363]">Input</label>
-                    <label class="text-sm text-[#909090] hover:text-[#494848] cursor-pointer hover:underline">
-                        Upload .json
-                        <input type="file" id="file-upload" accept=".json,application/json" class="hidden">
-                    </label>
-                </div>
-                <textarea
-                    id="json-input"
-                    class="h-[70vh] p-4 font-mono text-sm border border-[#D4D4D4] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#909090] bg-white"
-                    placeholder='Paste JSON here...'
-                    spellcheck="false"
-                ></textarea>
-                <div class="flex items-center gap-3 mt-3">
-                    <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-[#494848] text-white rounded-md hover:bg-[#636363]">
-                        Beautify
-                    </button>
-                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-[#B4B4B4] text-[#494848] rounded-md hover:bg-[#D4D4D4] hidden">
-                        Copy
-                    </button>
-                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-[#909090] hover:text-[#494848]">
-                        Clear
-                    </button>
+    <main class="flex-1 flex min-h-0 w-full">
+        <!-- Input column -->
+        <section id="input-col" class="flex flex-col min-w-0 flex-1 border-r border-[#D4D4D4]">
+            <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#D4D4D4]">
+                <label for="json-input" class="text-xs font-semibold tracking-wider text-[#636363] uppercase">Input</label>
+                <label class="text-sm text-[#909090] hover:text-[#494848] cursor-pointer hover:underline">
+                    Upload .json
+                    <input type="file" id="file-upload" accept=".json,application/json" class="hidden">
+                </label>
+            </div>
+            <textarea
+                id="json-input"
+                class="flex-1 min-h-0 p-4 font-mono text-sm resize-none focus:outline-none bg-white border-0"
+                placeholder='Paste JSON here...'
+                spellcheck="false"
+            ></textarea>
+            <div class="shrink-0 flex items-center gap-3 px-4 py-3 border-t border-[#D4D4D4] bg-[#F5F5F5]">
+                <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-[#494848] text-white rounded-md hover:bg-[#636363]">
+                    Beautify
+                </button>
+                <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-[#B4B4B4] text-[#494848] rounded-md hover:bg-[#D4D4D4] hidden">
+                    Copy
+                </button>
+                <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-[#909090] hover:text-[#494848]">
+                    Clear
+                </button>
+                <span id="error-msg" class="ml-auto text-sm text-[#909090] truncate"></span>
+            </div>
+        </section>
+        <!-- Output column -->
+        <section id="output-col" class="flex flex-col min-w-0 flex-1">
+            <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#D4D4D4]">
+                <p class="text-xs font-semibold tracking-wider text-[#636363] uppercase">Output</p>
+                <div class="flex items-center gap-4 text-sm">
+                    <button id="btn-expand-all" class="text-[#909090] hover:text-[#494848] hover:underline">Expand all</button>
+                    <button id="btn-collapse-all" class="text-[#909090] hover:text-[#494848] hover:underline">Collapse all</button>
+                    <button id="btn-toggle-input" class="text-[#909090] hover:text-[#494848] hover:underline" title="Toggle input panel">Hide input</button>
                 </div>
             </div>
-
-            <!-- Output panel -->
-            <div id="output-container" class="flex flex-col invisible">
-                <div class="flex items-center justify-between mb-2">
-                    <p class="text-sm font-medium text-[#636363]">Output</p>
-                    <div class="flex items-center gap-3">
-                        <button id="btn-expand-all" class="text-sm text-[#909090] hover:text-[#494848] hover:underline">Expand all</button>
-                        <button id="btn-collapse-all" class="text-sm text-[#909090] hover:text-[#494848] hover:underline">Collapse all</button>
-                    </div>
-                </div>
-                <pre id="json-output" class="json-tree h-[70vh] p-4 bg-[#F5F5F5] border border-[#D4D4D4] rounded-lg overflow-auto text-sm font-mono leading-relaxed"></pre>
-            </div>
-        </div>
+            <pre id="json-output" class="json-tree flex-1 min-h-0 m-0 p-4 bg-white overflow-auto text-sm font-mono leading-relaxed"></pre>
+        </section>
     </main>
 
     <script>
         const input = document.getElementById('json-input');
         const output = document.getElementById('json-output');
-        const outputContainer = document.getElementById('output-container');
         const errorMsg = document.getElementById('error-msg');
         const btnBeautify = document.getElementById('btn-beautify');
         const btnCopy = document.getElementById('btn-copy');
@@ -89,6 +82,13 @@
         const fileUpload = document.getElementById('file-upload');
         const btnExpandAll = document.getElementById('btn-expand-all');
         const btnCollapseAll = document.getElementById('btn-collapse-all');
+        const btnToggleInput = document.getElementById('btn-toggle-input');
+        const inputCol = document.getElementById('input-col');
+
+        btnToggleInput.addEventListener('click', function () {
+            const hidden = inputCol.classList.toggle('hidden');
+            btnToggleInput.textContent = hidden ? 'Show input' : 'Hide input';
+        });
 
         function escapeHtml(str) {
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -154,7 +154,6 @@
             try {
                 const parsed = JSON.parse(raw);
                 output.innerHTML = renderValue(parsed);
-                outputContainer.classList.remove('invisible');
                 btnCopy.classList.remove('hidden');
 
                 // Update toggle arrows on open/close
@@ -171,7 +170,6 @@
                     if (preview) preview.style.display = 'none';
                 });
             } catch (e) {
-                outputContainer.classList.add('invisible');
                 btnCopy.classList.add('hidden');
                 errorMsg.textContent = e.message;
             }
@@ -200,7 +198,6 @@
         btnClear.addEventListener('click', function () {
             input.value = '';
             output.innerHTML = '';
-            outputContainer.classList.add('invisible');
             btnCopy.classList.add('hidden');
             errorMsg.textContent = '';
             input.focus();

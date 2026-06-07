@@ -52,73 +52,115 @@
         .markdown-body hr { border: none; border-top: 1px solid #D4D4D4; margin: 1.2rem 0; }
         .markdown-body img { max-width: 100%; height: auto; border-radius: 0.25rem; }
         .markdown-body .katex-display { margin: 0.6rem 0; }
+
+        /* Frontmatter block */
+        .frontmatter { background: #F5F5F5; border: 1px solid #D4D4D4; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; }
+        .frontmatter-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; color: #909090; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .frontmatter dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; margin: 0; }
+        .frontmatter dt { font-weight: 600; color: #636363; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .frontmatter dd { color: #494848; margin: 0; word-break: break-word; }
     </style>
 </head>
-<body class="bg-white min-h-screen text-[#494848]">
-    <header class="w-full bg-[#494848] text-[#D4D4D4] px-4 py-3 flex items-center">
+<body class="bg-white h-screen flex flex-col text-[#494848] overflow-hidden">
+    <header class="shrink-0 w-full bg-[#494848] text-[#D4D4D4] px-4 py-3 flex items-center">
         <a href="/" class="hover:text-white text-xl leading-none w-6" title="Back to tools" aria-label="Back">&larr;</a>
         <h1 class="flex-1 text-center text-sm font-medium tracking-wide">MARKDOWN VIEWER</h1>
         <span class="w-6"></span>
     </header>
-    <main class="w-full px-6 mt-6 mb-12">
-        <div class="flex items-center justify-end mb-4">
-            <span id="error-msg" class="text-sm text-[#636363]"></span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-            <!-- Input panel -->
-            <div class="flex flex-col">
-                <div class="flex items-center justify-between mb-2">
-                    <label for="md-input" class="text-sm font-medium text-[#636363]">Input</label>
-                    <label class="text-sm text-[#909090] hover:text-[#494848] cursor-pointer hover:underline">
-                        Upload .md
-                        <input type="file" id="file-upload" accept=".md,.markdown,.txt" class="hidden">
-                    </label>
-                </div>
-                <textarea
-                    id="md-input"
-                    class="h-[70vh] p-4 font-mono text-sm border border-[#D4D4D4] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#909090] bg-white"
-                    placeholder="Paste Markdown here..."
-                    spellcheck="false"
-                ></textarea>
-                <div class="flex items-center gap-3 mt-3">
-                    <button id="btn-parse" class="px-4 py-1.5 text-sm font-medium bg-[#494848] text-white rounded-md hover:bg-[#636363]">
-                        Render
-                    </button>
-                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-[#909090] hover:text-[#494848]">
-                        Clear
-                    </button>
-                </div>
+    <main class="flex-1 flex min-h-0 w-full">
+        <!-- Input column -->
+        <section id="input-col" class="flex flex-col min-w-0 flex-1 border-r border-[#D4D4D4]">
+            <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#D4D4D4]">
+                <label for="md-input" class="text-xs font-semibold tracking-wider text-[#636363] uppercase">Input</label>
+                <label class="text-sm text-[#909090] hover:text-[#494848] cursor-pointer hover:underline">
+                    Upload .md
+                    <input type="file" id="file-upload" accept=".md,.markdown,.txt" class="hidden">
+                </label>
             </div>
-
-            <!-- Output panel -->
-            <div id="output-container" class="flex flex-col invisible">
-                <div class="flex items-center justify-between mb-2">
-                    <p class="text-sm font-medium text-[#636363]">Output</p>
-                    <label class="flex items-center gap-1.5 text-sm text-[#909090] cursor-pointer select-none">
+            <textarea
+                id="md-input"
+                class="flex-1 min-h-0 p-4 font-mono text-sm resize-none focus:outline-none bg-white border-0"
+                placeholder="Paste Markdown here... YAML frontmatter (---) is parsed and shown above the rendered output."
+                spellcheck="false"
+            ></textarea>
+            <div class="shrink-0 flex items-center gap-3 px-4 py-3 border-t border-[#D4D4D4] bg-[#F5F5F5]">
+                <button id="btn-parse" class="px-4 py-1.5 text-sm font-medium bg-[#494848] text-white rounded-md hover:bg-[#636363]">
+                    Render
+                </button>
+                <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-[#909090] hover:text-[#494848]">
+                    Clear
+                </button>
+                <span id="error-msg" class="ml-auto text-sm text-[#909090] truncate"></span>
+            </div>
+        </section>
+        <!-- Output column -->
+        <section id="output-col" class="flex flex-col min-w-0 flex-1">
+            <div class="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#D4D4D4]">
+                <p class="text-xs font-semibold tracking-wider text-[#636363] uppercase">Output</p>
+                <div class="flex items-center gap-4 text-sm">
+                    <label class="flex items-center gap-1.5 text-[#909090] cursor-pointer select-none">
                         <span>Render Math</span>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-math">
                             <span class="toggle-slider"></span>
                         </label>
                     </label>
+                    <button id="btn-toggle-input" class="text-[#909090] hover:text-[#494848] hover:underline" title="Toggle input panel">Hide input</button>
                 </div>
-                <div id="md-output" class="markdown-body h-[70vh] p-5 bg-white border border-[#D4D4D4] rounded-lg overflow-auto text-sm"></div>
             </div>
-        </div>
+            <div id="md-output" class="markdown-body flex-1 min-h-0 p-6 bg-white overflow-auto text-sm"></div>
+        </section>
     </main>
 
     <script>
         const input         = document.getElementById('md-input');
         const output        = document.getElementById('md-output');
-        const outputContainer = document.getElementById('output-container');
         const errorMsg      = document.getElementById('error-msg');
         const btnParse      = document.getElementById('btn-parse');
         const btnClear      = document.getElementById('btn-clear');
         const fileUpload    = document.getElementById('file-upload');
         const toggleMath    = document.getElementById('toggle-math');
+        const btnToggleInput = document.getElementById('btn-toggle-input');
+        const inputCol      = document.getElementById('input-col');
+
+        btnToggleInput.addEventListener('click', function () {
+            const hidden = inputCol.classList.toggle('hidden');
+            btnToggleInput.textContent = hidden ? 'Show input' : 'Hide input';
+        });
 
         let mermaidCounter = 0;
+
+        function escapeAttr(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Extract YAML-ish frontmatter (simple key: value lines, optionally quoted; arrays via [a, b] kept as raw string).
+        function extractFrontmatter(text) {
+            const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+            if (!m) return { fm: null, body: text };
+            const fm = [];
+            m[1].split(/\r?\n/).forEach(function (line) {
+                if (!line.trim() || line.trim().startsWith('#')) return;
+                const idx = line.indexOf(':');
+                if (idx === -1) return;
+                const k = line.slice(0, idx).trim();
+                let v = line.slice(idx + 1).trim();
+                if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+                    v = v.slice(1, -1);
+                }
+                fm.push([k, v]);
+            });
+            return { fm: fm.length ? fm : null, body: m[2] };
+        }
+
+        function renderFrontmatter(fm) {
+            let html = '<div class="frontmatter"><div class="frontmatter-label">Frontmatter</div><dl>';
+            fm.forEach(function (pair) {
+                html += '<dt>' + escapeAttr(pair[0]) + '</dt><dd>' + escapeAttr(pair[1]) + '</dd>';
+            });
+            html += '</dl></div>';
+            return html;
+        }
 
         // Custom marked renderer: emit <pre class="mermaid"> for ```mermaid blocks
         const renderer = new marked.Renderer();
@@ -150,9 +192,11 @@
                 return;
             }
 
+            const { fm, body } = extractFrontmatter(raw);
+
             let html;
             try {
-                html = marked.parse(raw, { renderer: renderer });
+                html = marked.parse(body, { renderer: renderer });
             } catch (e) {
                 errorMsg.textContent = 'Parse error: ' + e.message;
                 return;
@@ -163,8 +207,7 @@
                 ADD_ATTR: ['target'],
             });
 
-            output.innerHTML = safe;
-            outputContainer.classList.remove('invisible');
+            output.innerHTML = (fm ? renderFrontmatter(fm) : '') + safe;
 
             // Syntax-highlight non-mermaid code blocks
             output.querySelectorAll('pre code').forEach(function(block) {
@@ -212,7 +255,6 @@
         btnClear.addEventListener('click', function() {
             input.value = '';
             output.innerHTML = '';
-            outputContainer.classList.add('invisible');
             errorMsg.textContent = '';
             input.focus();
         });
