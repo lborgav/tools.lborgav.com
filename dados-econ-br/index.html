@@ -14,15 +14,15 @@
             theme: {
                 extend: {
                     colors: {
-                        background: '#494848',
-                        card: '#636363',
-                        'card-hover': '#6a6a6a',
-                        border: '#909090',
-                        primary: '#909090',
+                        background: '#ffffff',
+                        card: '#ffffff',
+                        'card-hover': '#F5F5F5',
+                        border: '#D4D4D4',
+                        primary: '#494848',
                         success: '#22c55e',
                         danger: '#ef4444',
                         muted: '#909090',
-                        'muted-light': '#B4B4B4'
+                        'muted-light': '#636363'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -37,12 +37,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #494848;
-            color: #D4D4D4;
+            background: #ffffff;
+            color: #494848;
             min-height: 100vh;
         }
         .skeleton {
-            background: linear-gradient(90deg, #636363 25%, #B4B4B4 50%, #636363 75%);
+            background: linear-gradient(90deg, #F5F5F5 25%, #D4D4D4 50%, #F5F5F5 75%);
             background-size: 200% 100%;
             animation: loading 1.5s ease-in-out infinite;
         }
@@ -56,15 +56,15 @@
         }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         .indicator-card {
-            background: #636363;
-            border: 1px solid #909090;
+            background: #ffffff;
+            border: 1px solid #D4D4D4;
             border-radius: 12px;
             padding: 20px 24px;
             transition: all 0.2s ease;
         }
         .indicator-card:hover {
-            border-color: #909090;
-            background: #6a6a6a;
+            border-color: #B4B4B4;
+            background: #F5F5F5;
         }
         .change-badge {
             display: inline-flex;
@@ -98,8 +98,8 @@
             flex-shrink: 0;
         }
         .chart-container {
-            background: #636363;
-            border: 1px solid #909090;
+            background: #ffffff;
+            border: 1px solid #D4D4D4;
             border-radius: 12px;
             padding: 24px;
         }
@@ -349,7 +349,7 @@
                         <span class="text-xs font-semibold tracking-wider text-muted uppercase">${cfg.label}</span>
                         <div class="icon-circle" style="background: ${cfg.color}15; color: ${cfg.color};">${cfg.icon}</div>
                     </div>
-                    <div class="text-3xl font-bold text-white font-mono tracking-tight mb-3">${value}</div>
+                    <div class="text-3xl font-bold text-[#494848] font-mono tracking-tight mb-3">${value}</div>
                     <div class="flex items-center gap-3">
                         ${changeDisplay}
                         <span class="text-xs text-muted">${data.lastUpdate}</span>
@@ -523,10 +523,10 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(73, 72, 72, 0.95)',
-                        titleColor: '#D4D4D4',
-                        bodyColor: '#D4D4D4',
-                        borderColor: '#909090',
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        titleColor: '#494848',
+                        bodyColor: '#494848',
+                        borderColor: '#D4D4D4',
                         borderWidth: 1,
                         padding: 12,
                         cornerRadius: 8,
@@ -543,7 +543,7 @@
                 },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
+                        grid: { color: 'rgba(0,0,0,0.06)', drawBorder: false },
                         ticks: {
                             color: '#909090',
                             font: { size: 11 },
@@ -552,7 +552,7 @@
                         border: { display: false }
                     },
                     y: {
-                        grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
+                        grid: { color: 'rgba(0,0,0,0.06)', drawBorder: false },
                         ticks: {
                             color: '#909090',
                             font: { size: 11 },
