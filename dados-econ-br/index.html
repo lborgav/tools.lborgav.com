@@ -14,15 +14,15 @@
             theme: {
                 extend: {
                     colors: {
-                        background: '#0b1121',
-                        card: '#111a2e',
-                        'card-hover': '#162035',
-                        border: '#1e2d4a',
-                        primary: '#3b82f6',
-                        success: '#22c55e',
-                        danger: '#ef4444',
-                        muted: '#64748b',
-                        'muted-light': '#94a3b8'
+                        background: '#494848',
+                        card: '#636363',
+                        'card-hover': '#6a6a6a',
+                        border: '#909090',
+                        primary: '#909090',
+                        success: '#D4D4D4',
+                        danger: '#909090',
+                        muted: '#909090',
+                        'muted-light': '#B4B4B4'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -37,12 +37,12 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            background: #0b1121;
-            color: #e2e8f0;
+            background: #494848;
+            color: #D4D4D4;
             min-height: 100vh;
         }
         .skeleton {
-            background: linear-gradient(90deg, #111a2e 25%, #1a2540 50%, #111a2e 75%);
+            background: linear-gradient(90deg, #636363 25%, #B4B4B4 50%, #636363 75%);
             background-size: 200% 100%;
             animation: loading 1.5s ease-in-out infinite;
         }
@@ -56,15 +56,15 @@
         }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         .indicator-card {
-            background: #111a2e;
-            border: 1px solid #1e2d4a;
+            background: #636363;
+            border: 1px solid #909090;
             border-radius: 12px;
             padding: 20px 24px;
             transition: all 0.2s ease;
         }
         .indicator-card:hover {
-            border-color: #2a3f66;
-            background: #14203a;
+            border-color: #909090;
+            background: #6a6a6a;
         }
         .change-badge {
             display: inline-flex;
@@ -77,16 +77,16 @@
             font-family: 'JetBrains Mono', monospace;
         }
         .change-badge.positive {
-            background: rgba(34, 197, 94, 0.15);
-            color: #4ade80;
+            background: rgba(212, 212, 212, 0.15);
+            color: #D4D4D4;
         }
         .change-badge.negative {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
+            background: rgba(144, 144, 144, 0.15);
+            color: #B4B4B4;
         }
         .change-badge.neutral {
-            background: rgba(100, 116, 139, 0.15);
-            color: #94a3b8;
+            background: rgba(144, 144, 144, 0.15);
+            color: #B4B4B4;
         }
         .icon-circle {
             width: 40px;
@@ -98,42 +98,29 @@
             flex-shrink: 0;
         }
         .chart-container {
-            background: #111a2e;
-            border: 1px solid #1e2d4a;
+            background: #636363;
+            border: 1px solid #909090;
             border-radius: 12px;
             padding: 24px;
         }
     </style>
 </head>
 <body>
-    <!-- Sticky Header -->
-    <header class="sticky top-0 z-50 backdrop-blur-xl border-b border-border/60" style="background: rgba(11, 17, 33, 0.85);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-bold text-white">Painel Econômico</h1>
-                        <p class="text-xs text-muted hidden sm:block">Indicadores macroeconômicos do Brasil</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="relative flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
-                    </span>
-                    <span class="text-sm text-muted-light">Dados ao vivo</span>
-                </div>
-            </div>
-        </div>
+    <!-- Tool header -->
+    <header class="sticky top-0 z-50 w-full px-4 py-3 flex items-center border-b border-[#636363]" style="background: #494848;">
+        <a href="/" class="text-[#D4D4D4] hover:text-white text-xl leading-none w-6" title="Back to tools" aria-label="Back">&larr;</a>
+        <h1 class="flex-1 text-center text-sm font-medium tracking-wide text-[#D4D4D4]">PAINEL ECONÔMICO BRASIL</h1>
+        <span class="flex items-center gap-2">
+            <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
+            </span>
+            <span class="text-xs text-muted-light hidden sm:inline">Ao vivo</span>
+        </span>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="w-full px-4 sm:px-6 lg:px-8 py-8">
         <!-- Loading State -->
         <div id="loading" class="space-y-8">
             <div>
@@ -208,16 +195,16 @@
 
         // ── Indicator Configurations ──────────────────
         const INDICATOR_CONFIG = {
-            selic: { label: 'TAXA SELIC', icon: ICONS.bank, color: '#3b82f6', suffix: ' a.a.', section: 'principal' },
-            cdi: { label: 'CDI', icon: ICONS.percent, color: '#a855f7', suffix: ' a.a.', section: 'principal' },
-            ipcaMensal: { label: 'IPCA MENSAL', icon: ICONS.chart, color: '#3b82f6', suffix: '', section: 'principal' },
-            ipca12Meses: { label: 'IPCA 12 MESES', icon: ICONS.trending, color: '#22c55e', suffix: '', section: 'principal' },
-            usd: { label: 'DÓLAR (PTAX)', icon: ICONS.dollar, color: '#3b82f6', suffix: '', section: 'cambio' },
-            eur: { label: 'EURO', icon: ICONS.globe, color: '#22c55e', suffix: '', section: 'cambio' },
-            igpm: { label: 'IGP-M MENSAL', icon: ICONS.clipboard, color: '#3b82f6', suffix: '', section: 'cambio' },
-            desemprego: { label: 'DESEMPREGO', icon: ICONS.chart, color: '#3b82f6', suffix: '', section: 'cambio' },
-            dividaPublica: { label: 'DÍVIDA/PIB', icon: ICONS.shield, color: '#22c55e', suffix: '', section: 'fiscal' },
-            reservas: { label: 'RESERVAS INTERNACIONAIS', icon: ICONS.globe, color: '#22c55e', suffix: '', section: 'fiscal' }
+            selic: { label: 'TAXA SELIC', icon: ICONS.bank, color: '#909090', suffix: ' a.a.', section: 'principal' },
+            cdi: { label: 'CDI', icon: ICONS.percent, color: '#B4B4B4', suffix: ' a.a.', section: 'principal' },
+            ipcaMensal: { label: 'IPCA MENSAL', icon: ICONS.chart, color: '#909090', suffix: '', section: 'principal' },
+            ipca12Meses: { label: 'IPCA 12 MESES', icon: ICONS.trending, color: '#D4D4D4', suffix: '', section: 'principal' },
+            usd: { label: 'DÓLAR (PTAX)', icon: ICONS.dollar, color: '#909090', suffix: '', section: 'cambio' },
+            eur: { label: 'EURO', icon: ICONS.globe, color: '#D4D4D4', suffix: '', section: 'cambio' },
+            igpm: { label: 'IGP-M MENSAL', icon: ICONS.clipboard, color: '#909090', suffix: '', section: 'cambio' },
+            desemprego: { label: 'DESEMPREGO', icon: ICONS.chart, color: '#909090', suffix: '', section: 'cambio' },
+            dividaPublica: { label: 'DÍVIDA/PIB', icon: ICONS.shield, color: '#D4D4D4', suffix: '', section: 'fiscal' },
+            reservas: { label: 'RESERVAS INTERNACIONAIS', icon: ICONS.globe, color: '#D4D4D4', suffix: '', section: 'fiscal' }
         };
 
         // ── Utility Functions ──────────────────────────
@@ -459,8 +446,8 @@
                     datasets: [{
                         label: 'SELIC (%)',
                         data: values,
-                        borderColor: '#38bdf8',
-                        backgroundColor: 'rgba(56, 189, 248, 0.08)',
+                        borderColor: '#B4B4B4',
+                        backgroundColor: 'rgba(180, 180, 180, 0.08)',
                         stepped: 'after',
                         fill: true,
                         borderWidth: 2,
@@ -487,14 +474,14 @@
                     datasets: [{
                         label: 'IPCA 12 meses',
                         data: values,
-                        borderColor: '#ef4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                        borderColor: '#909090',
+                        backgroundColor: 'rgba(144, 144, 144, 0.12)',
                         tension: 0.4,
                         fill: true,
                         borderWidth: 2.5,
                         pointRadius: 0,
                         pointHoverRadius: 5,
-                        pointHoverBackgroundColor: '#ef4444'
+                        pointHoverBackgroundColor: '#909090'
                     }]
                 },
                 options: {
@@ -507,7 +494,7 @@
                                     type: 'line',
                                     yMin: 4.5,
                                     yMax: 4.5,
-                                    borderColor: 'rgba(239, 68, 68, 0.5)',
+                                    borderColor: 'rgba(144, 144, 144, 0.5)',
                                     borderWidth: 2,
                                     borderDash: [8, 4],
                                     label: {
@@ -515,7 +502,7 @@
                                         content: 'Meta 4,5%',
                                         position: 'end',
                                         backgroundColor: 'transparent',
-                                        color: '#ef4444',
+                                        color: '#909090',
                                         font: { size: 12, weight: 'bold', family: 'Inter' },
                                         padding: 4
                                     }
@@ -536,10 +523,10 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        titleColor: '#e2e8f0',
-                        bodyColor: '#e2e8f0',
-                        borderColor: '#334155',
+                        backgroundColor: 'rgba(73, 72, 72, 0.95)',
+                        titleColor: '#D4D4D4',
+                        bodyColor: '#D4D4D4',
+                        borderColor: '#909090',
                         borderWidth: 1,
                         padding: 12,
                         cornerRadius: 8,
@@ -558,7 +545,7 @@
                     x: {
                         grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
                         ticks: {
-                            color: '#64748b',
+                            color: '#909090',
                             font: { size: 11 },
                             maxTicksLimit: 12
                         },
@@ -567,7 +554,7 @@
                     y: {
                         grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
                         ticks: {
-                            color: '#64748b',
+                            color: '#909090',
                             font: { size: 11 },
                             callback: v => v.toFixed(v % 1 === 0 ? 0 : 1) + unit
                         },

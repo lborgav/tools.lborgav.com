@@ -7,54 +7,58 @@
     <title>JSON Viewer | tools.lborgav</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .json-key { color: #881391; }
-        .json-string { color: #0b7285; }
-        .json-number { color: #c92a2a; }
-        .json-boolean { color: #e67700; }
-        .json-null { color: #868e96; }
+        .json-key { color: #494848; font-weight: 600; }
+        .json-string { color: #636363; }
+        .json-number { color: #494848; }
+        .json-boolean { color: #636363; font-style: italic; }
+        .json-null { color: #909090; }
 
         .json-tree details { display: inline; }
         .json-tree summary { display: inline; cursor: pointer; list-style: none; }
         .json-tree summary::-webkit-details-marker { display: none; }
         .json-tree summary::marker { display: none; content: ''; }
-        .json-tree summary .toggle { user-select: none; color: #adb5bd; font-size: 0.7em; vertical-align: middle; margin-right: 2px; }
+        .json-tree summary .toggle { user-select: none; color: #909090; font-size: 0.7em; vertical-align: middle; margin-right: 2px; }
         .json-tree details[open] > summary .toggle { content: ''; }
-        .json-tree .collapsed-preview { color: #adb5bd; font-style: italic; }
+        .json-tree .collapsed-preview { color: #909090; font-style: italic; }
         .json-tree .indent { padding-left: 1.25em; }
     </style>
 </head>
-<body class="bg-white min-h-screen text-slate-800">
-    <main class="mx-auto px-6 mt-6 mb-12">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-lg font-medium">JSON Viewer</h1>
-            <span id="error-msg" class="text-sm text-red-600"></span>
+<body class="bg-white min-h-screen text-[#494848]">
+    <header class="w-full bg-[#494848] text-[#D4D4D4] px-4 py-3 flex items-center">
+        <a href="/" class="hover:text-white text-xl leading-none w-6" title="Back to tools" aria-label="Back">&larr;</a>
+        <h1 class="flex-1 text-center text-sm font-medium tracking-wide">JSON VIEWER</h1>
+        <span class="w-6"></span>
+    </header>
+    <main class="w-full px-6 mt-6 mb-12">
+        <div class="flex items-center justify-end mb-4">
+            <span id="error-msg" class="text-sm text-[#636363]"></span>
         </div>
 
         <!-- Side-by-side panels -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             <!-- Input panel -->
             <div class="flex flex-col">
                 <div class="flex items-center justify-between mb-2">
-                    <label for="json-input" class="text-sm font-medium text-slate-600">Input</label>
-                    <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
+                    <label for="json-input" class="text-sm font-medium text-[#636363]">Input</label>
+                    <label class="text-sm text-[#909090] hover:text-[#494848] cursor-pointer hover:underline">
                         Upload .json
                         <input type="file" id="file-upload" accept=".json,application/json" class="hidden">
                     </label>
                 </div>
                 <textarea
                     id="json-input"
-                    class="h-[60vh] max-h-[600px] p-4 font-mono text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    class="h-[70vh] p-4 font-mono text-sm border border-[#D4D4D4] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#909090] bg-white"
                     placeholder='Paste JSON here...'
                     spellcheck="false"
                 ></textarea>
                 <div class="flex items-center gap-3 mt-3">
-                    <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
+                    <button id="btn-beautify" class="px-4 py-1.5 text-sm font-medium bg-[#494848] text-white rounded-md hover:bg-[#636363]">
                         Beautify
                     </button>
-                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 hidden">
+                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-[#B4B4B4] text-[#494848] rounded-md hover:bg-[#D4D4D4] hidden">
                         Copy
                     </button>
-                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-[#909090] hover:text-[#494848]">
                         Clear
                     </button>
                 </div>
@@ -63,13 +67,13 @@
             <!-- Output panel -->
             <div id="output-container" class="flex flex-col invisible">
                 <div class="flex items-center justify-between mb-2">
-                    <p class="text-sm font-medium text-slate-600">Output</p>
+                    <p class="text-sm font-medium text-[#636363]">Output</p>
                     <div class="flex items-center gap-3">
-                        <button id="btn-expand-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Expand all</button>
-                        <button id="btn-collapse-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Collapse all</button>
+                        <button id="btn-expand-all" class="text-sm text-[#909090] hover:text-[#494848] hover:underline">Expand all</button>
+                        <button id="btn-collapse-all" class="text-sm text-[#909090] hover:text-[#494848] hover:underline">Collapse all</button>
                     </div>
                 </div>
-                <pre id="json-output" class="json-tree h-[60vh] max-h-[600px] p-4 bg-slate-50 border border-slate-200 rounded-lg overflow-auto text-sm font-mono leading-relaxed"></pre>
+                <pre id="json-output" class="json-tree h-[70vh] p-4 bg-[#F5F5F5] border border-[#D4D4D4] rounded-lg overflow-auto text-sm font-mono leading-relaxed"></pre>
             </div>
         </div>
     </main>

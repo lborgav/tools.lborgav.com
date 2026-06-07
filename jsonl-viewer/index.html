@@ -10,25 +10,25 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
     <style>
-        .json-key     { color: #881391; }
-        .json-string  { color: #0b7285; }
-        .json-number  { color: #c92a2a; }
-        .json-boolean { color: #e67700; }
-        .json-null    { color: #868e96; }
+        .json-key     { color: #494848; font-weight: 600; }
+        .json-string  { color: #636363; }
+        .json-number  { color: #494848; }
+        .json-boolean { color: #636363; font-style: italic; }
+        .json-null    { color: #909090; }
 
         .json-tree details { display: inline; }
         .json-tree summary { display: inline; cursor: pointer; list-style: none; }
         .json-tree summary::-webkit-details-marker { display: none; }
         .json-tree summary::marker { display: none; content: ''; }
-        .json-tree summary .toggle { user-select: none; color: #adb5bd; font-size: 0.7em; vertical-align: middle; margin-right: 2px; }
-        .json-tree .collapsed-preview { color: #adb5bd; font-style: italic; }
+        .json-tree summary .toggle { user-select: none; color: #909090; font-size: 0.7em; vertical-align: middle; margin-right: 2px; }
+        .json-tree .collapsed-preview { color: #909090; font-style: italic; }
         .json-tree .indent { padding-left: 1.25em; }
 
-        .line-card { border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem; }
-        .line-card-header { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.5rem 0.75rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 0.5rem 0.5rem 0 0; }
-        .line-card.error-card { border-left: 3px solid #fa5252; }
-        .line-card.error-card .line-card-header { background: #fff5f5; }
-        .line-badge { font-size: 0.7rem; font-weight: 600; color: #94a3b8; font-family: monospace; min-width: 2rem; }
+        .line-card { border: 1px solid #D4D4D4; border-radius: 0.5rem; margin-bottom: 0.5rem; background: white; }
+        .line-card-header { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.5rem 0.75rem; background: #F5F5F5; border-bottom: 1px solid #D4D4D4; border-radius: 0.5rem 0.5rem 0 0; }
+        .line-card.error-card { border-left: 3px solid #636363; }
+        .line-card.error-card .line-card-header { background: #D4D4D4; }
+        .line-badge { font-size: 0.7rem; font-weight: 600; color: #909090; font-family: monospace; min-width: 2rem; }
         .line-body { padding: 0.5rem 0.75rem; }
 
         /* KaTeX display math shouldn't break the monospace flow */
@@ -38,44 +38,48 @@
         /* Toggle switch */
         .toggle-switch { position: relative; display: inline-block; width: 2rem; height: 1.1rem; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; cursor: pointer; transition: background 0.15s; }
+        .toggle-slider { position: absolute; inset: 0; background: #B4B4B4; border-radius: 9999px; cursor: pointer; transition: background 0.15s; }
         .toggle-slider::before { content: ''; position: absolute; width: 0.8rem; height: 0.8rem; left: 0.15rem; bottom: 0.15rem; background: white; border-radius: 50%; transition: transform 0.15s; }
-        input:checked + .toggle-slider { background: #334155; }
+        input:checked + .toggle-slider { background: #494848; }
         input:checked + .toggle-slider::before { transform: translateX(0.9rem); }
     </style>
 </head>
-<body class="bg-white min-h-screen text-slate-800">
-    <main class="mx-auto px-6 mt-6 mb-12">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-lg font-medium">JSONL Viewer</h1>
-            <span id="error-msg" class="text-sm text-red-600"></span>
+<body class="bg-white min-h-screen text-[#494848]">
+    <header class="w-full bg-[#494848] text-[#D4D4D4] px-4 py-3 flex items-center">
+        <a href="/" class="hover:text-white text-xl leading-none w-6" title="Back to tools" aria-label="Back">&larr;</a>
+        <h1 class="flex-1 text-center text-sm font-medium tracking-wide">JSONL VIEWER</h1>
+        <span class="w-6"></span>
+    </header>
+    <main class="w-full px-6 mt-6 mb-12">
+        <div class="flex items-center justify-end mb-4">
+            <span id="error-msg" class="text-sm text-[#636363]"></span>
         </div>
 
         <!-- Side-by-side panels -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             <!-- Input panel -->
             <div class="flex flex-col">
                 <div class="flex items-center justify-between mb-2">
-                    <label for="jsonl-input" class="text-sm font-medium text-slate-600">Input</label>
-                    <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
+                    <label for="jsonl-input" class="text-sm font-medium text-[#636363]">Input</label>
+                    <label class="text-sm text-[#909090] hover:text-[#494848] cursor-pointer hover:underline">
                         Upload .jsonl
                         <input type="file" id="file-upload" accept=".jsonl,.json,.txt" class="hidden">
                     </label>
                 </div>
                 <textarea
                     id="jsonl-input"
-                    class="h-[60vh] max-h-[600px] p-4 font-mono text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    class="h-[70vh] p-4 font-mono text-sm border border-[#D4D4D4] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#909090] bg-white"
                     placeholder='Paste JSONL here (one JSON object per line)...'
                     spellcheck="false"
                 ></textarea>
                 <div class="flex items-center gap-3 mt-3">
-                    <button id="btn-parse" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
+                    <button id="btn-parse" class="px-4 py-1.5 text-sm font-medium bg-[#494848] text-white rounded-md hover:bg-[#636363]">
                         Parse
                     </button>
-                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-50 hidden">
+                    <button id="btn-copy" class="px-4 py-1.5 text-sm font-medium border border-[#B4B4B4] text-[#494848] rounded-md hover:bg-[#D4D4D4] hidden">
                         Copy as JSONL
                     </button>
-                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-[#909090] hover:text-[#494848]">
                         Clear
                     </button>
                 </div>
@@ -84,22 +88,22 @@
             <!-- Output panel -->
             <div id="output-container" class="flex flex-col invisible">
                 <div class="flex items-center justify-between mb-2">
-                    <p class="text-sm font-medium text-slate-600">
-                        Output <span id="line-count" class="text-slate-400 font-normal"></span>
+                    <p class="text-sm font-medium text-[#636363]">
+                        Output <span id="line-count" class="text-[#909090] font-normal"></span>
                     </p>
                     <div class="flex items-center gap-4">
-                        <label class="flex items-center gap-1.5 text-sm text-slate-500 cursor-pointer select-none">
+                        <label class="flex items-center gap-1.5 text-sm text-[#909090] cursor-pointer select-none">
                             <span>Render Math</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="toggle-math">
                                 <span class="toggle-slider"></span>
                             </label>
                         </label>
-                        <button id="btn-expand-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Expand all</button>
-                        <button id="btn-collapse-all" class="text-sm text-slate-500 hover:text-slate-800 hover:underline">Collapse all</button>
+                        <button id="btn-expand-all" class="text-sm text-[#909090] hover:text-[#494848] hover:underline">Expand all</button>
+                        <button id="btn-collapse-all" class="text-sm text-[#909090] hover:text-[#494848] hover:underline">Collapse all</button>
                     </div>
                 </div>
-                <div id="jsonl-output" class="json-tree h-[60vh] max-h-[600px] p-2 bg-slate-50 border border-slate-200 rounded-lg overflow-auto text-sm font-mono leading-relaxed"></div>
+                <div id="jsonl-output" class="json-tree h-[70vh] p-2 bg-[#F5F5F5] border border-[#D4D4D4] rounded-lg overflow-auto text-sm font-mono leading-relaxed"></div>
             </div>
         </div>
     </main>
