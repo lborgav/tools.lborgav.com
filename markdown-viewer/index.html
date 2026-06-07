@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paste or upload Markdown to see it rendered with GFM, code highlighting, math, and Mermaid diagrams">
+    <title>Markdown Viewer | tools.lborgav</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/common.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+        window.__mermaid = mermaid;
+    </script>
+    <style>
+        /* Toggle switch (mirrors jsonl-viewer) */
+        .toggle-switch { position: relative; display: inline-block; width: 2rem; height: 1.1rem; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; cursor: pointer; transition: background 0.15s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 0.8rem; height: 0.8rem; left: 0.15rem; bottom: 0.15rem; background: white; border-radius: 50%; transition: transform 0.15s; }
+        input:checked + .toggle-slider { background: #334155; }
+        input:checked + .toggle-slider::before { transform: translateX(0.9rem); }
+
+        /* Rendered markdown */
+        .markdown-body { color: #1e293b; line-height: 1.6; }
+        .markdown-body h1 { font-size: 1.6rem; font-weight: 600; margin: 1.4rem 0 0.8rem; padding-bottom: 0.3rem; border-bottom: 1px solid #e2e8f0; }
+        .markdown-body h2 { font-size: 1.3rem; font-weight: 600; margin: 1.2rem 0 0.6rem; padding-bottom: 0.25rem; border-bottom: 1px solid #e2e8f0; }
+        .markdown-body h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+        .markdown-body h4, .markdown-body h5, .markdown-body h6 { font-weight: 600; margin: 0.9rem 0 0.4rem; }
+        .markdown-body p { margin: 0.6rem 0; }
+        .markdown-body a { color: #0b7285; text-decoration: underline; text-underline-offset: 2px; }
+        .markdown-body a:hover { color: #075666; }
+        .markdown-body ul, .markdown-body ol { margin: 0.6rem 0; padding-left: 1.5rem; }
+        .markdown-body ul { list-style: disc; }
+        .markdown-body ol { list-style: decimal; }
+        .markdown-body li { margin: 0.2rem 0; }
+        .markdown-body li > input[type="checkbox"] { margin-right: 0.4rem; }
+        .markdown-body blockquote { border-left: 3px solid #cbd5e1; padding: 0.2rem 0.9rem; color: #475569; font-style: italic; margin: 0.7rem 0; }
+        .markdown-body code { background: #f1f5f9; padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-size: 0.9em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .markdown-body pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.8rem; overflow-x: auto; margin: 0.8rem 0; }
+        .markdown-body pre code { background: transparent; padding: 0; border-radius: 0; font-size: 0.85rem; }
+        .markdown-body pre.mermaid { background: transparent; border: none; padding: 0.5rem 0; text-align: center; }
+        .markdown-body table { border-collapse: collapse; margin: 0.8rem 0; font-size: 0.9rem; }
+        .markdown-body th, .markdown-body td { border: 1px solid #e2e8f0; padding: 0.4rem 0.7rem; }
+        .markdown-body th { background: #f8fafc; font-weight: 600; }
+        .markdown-body hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.2rem 0; }
+        .markdown-body img { max-width: 100%; height: auto; border-radius: 0.25rem; }
+        .markdown-body .katex-display { margin: 0.6rem 0; }
+    </style>
+</head>
+<body class="bg-white min-h-screen text-slate-800">
+    <main class="mx-auto px-6 mt-6 mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-lg font-medium">Markdown Viewer</h1>
+            <span id="error-msg" class="text-sm text-red-600"></span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Input panel -->
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="md-input" class="text-sm font-medium text-slate-600">Input</label>
+                    <label class="text-sm text-slate-500 hover:text-slate-800 cursor-pointer hover:underline">
+                        Upload .md
+                        <input type="file" id="file-upload" accept=".md,.markdown,.txt" class="hidden">
+                    </label>
+                </div>
+                <textarea
+                    id="md-input"
+                    class="h-[60vh] max-h-[600px] p-4 font-mono text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-slate-300"
+                    placeholder="Paste Markdown here..."
+                    spellcheck="false"
+                ></textarea>
+                <div class="flex items-center gap-3 mt-3">
+                    <button id="btn-parse" class="px-4 py-1.5 text-sm font-medium bg-slate-800 text-white rounded-md hover:bg-slate-700">
+                        Render
+                    </button>
+                    <button id="btn-clear" class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output panel -->
+            <div id="output-container" class="flex flex-col invisible">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm font-medium text-slate-600">Output</p>
+                    <label class="flex items-center gap-1.5 text-sm text-slate-500 cursor-pointer select-none">
+                        <span>Render Math</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-math">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </label>
+                </div>
+                <div id="md-output" class="markdown-body h-[60vh] max-h-[600px] p-5 bg-white border border-slate-200 rounded-lg overflow-auto text-sm"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const input         = document.getElementById('md-input');
+        const output        = document.getElementById('md-output');
+        const outputContainer = document.getElementById('output-container');
+        const errorMsg      = document.getElementById('error-msg');
+        const btnParse      = document.getElementById('btn-parse');
+        const btnClear      = document.getElementById('btn-clear');
+        const fileUpload    = document.getElementById('file-upload');
+        const toggleMath    = document.getElementById('toggle-math');
+
+        let mermaidCounter = 0;
+
+        // Custom marked renderer: emit <pre class="mermaid"> for ```mermaid blocks
+        const renderer = new marked.Renderer();
+        const defaultCode = renderer.code.bind(renderer);
+        renderer.code = function(code, lang, escaped) {
+            // marked v12+ may pass an object; normalize
+            if (typeof code === 'object' && code !== null) {
+                lang = code.lang;
+                code = code.text;
+            }
+            if ((lang || '').trim().toLowerCase() === 'mermaid') {
+                // Raw source — DOMPurify will keep <pre> with class
+                const escapedSrc = code
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                return '<pre class="mermaid">' + escapedSrc + '</pre>';
+            }
+            return defaultCode({ text: code, lang: lang, escaped: escaped });
+        };
+
+        marked.setOptions({ gfm: true, breaks: false });
+
+        function render() {
+            const raw = input.value;
+            errorMsg.textContent = '';
+            if (!raw.trim()) {
+                errorMsg.textContent = 'Input is empty.';
+                return;
+            }
+
+            let html;
+            try {
+                html = marked.parse(raw, { renderer: renderer });
+            } catch (e) {
+                errorMsg.textContent = 'Parse error: ' + e.message;
+                return;
+            }
+
+            const safe = DOMPurify.sanitize(html, {
+                ADD_TAGS: ['details', 'summary'],
+                ADD_ATTR: ['target'],
+            });
+
+            output.innerHTML = safe;
+            outputContainer.classList.remove('invisible');
+
+            // Syntax-highlight non-mermaid code blocks
+            output.querySelectorAll('pre code').forEach(function(block) {
+                if (block.parentElement.classList.contains('mermaid')) return;
+                try { hljs.highlightElement(block); } catch (e) { /* ignore */ }
+            });
+
+            // Render Mermaid diagrams
+            const mermaidBlocks = output.querySelectorAll('pre.mermaid');
+            if (mermaidBlocks.length && window.__mermaid) {
+                mermaidBlocks.forEach(function(b) {
+                    if (!b.id) b.id = 'mermaid-' + (++mermaidCounter);
+                });
+                window.__mermaid.run({ nodes: Array.from(mermaidBlocks) }).catch(function(err) {
+                    console.error('Mermaid render error:', err);
+                });
+            }
+
+            if (toggleMath.checked) applyMath();
+        }
+
+        function applyMath() {
+            if (typeof renderMathInElement === 'undefined') return;
+            renderMathInElement(output, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true  },
+                    { left: '$',  right: '$',  display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true  },
+                ],
+                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                throwOnError: false,
+            });
+        }
+
+        btnParse.addEventListener('click', render);
+
+        input.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                render();
+            }
+        });
+
+        btnClear.addEventListener('click', function() {
+            input.value = '';
+            output.innerHTML = '';
+            outputContainer.classList.add('invisible');
+            errorMsg.textContent = '';
+            input.focus();
+        });
+
+        toggleMath.addEventListener('change', function() {
+            if (input.value.trim()) render();
+        });
+
+        fileUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                input.value = evt.target.result;
+                render();
+            };
+            reader.readAsText(file);
+            fileUpload.value = '';
+        });
+    </script>
+</body>
+</html>
